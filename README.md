@@ -5,9 +5,18 @@ has no backend, account, cloud sync, or AI dependency.
 
 ## Current stage
 
-This first increment contains the Vite/React/TypeScript shell, a pure TypeScript
-3×3×3 cubie engine, view-orientation mapping, and unit tests. It intentionally
-does not contain 3D rendering, keyboard input, animation, or settings UI.
+The project now contains the Vite/React/TypeScript shell, a pure TypeScript
+3x3x3 cubie engine, view-orientation mapping, and a basic static Three.js
+renderer.
+
+The Play page renders the current `CubeState` as 26 visible cubies with colored
+stickers. Temporary debug buttons can reset the cube or apply F/U/R moves so the
+CubeState -> renderer path can be verified. The renderer is intentionally
+read-only: cube position and sticker orientation come from `CubeState`, not from
+Three.js mesh state.
+
+This increment still does not contain turn animation, keyboard input, settings,
+or persistent storage.
 
 ## Commands
 
@@ -30,7 +39,6 @@ face from outside the cube.
 
 ## Planned work
 
-- 3D rendering
 - Keyboard controls
 - Turn animations
 - Settings page
