@@ -1,18 +1,24 @@
 import { useEffect } from 'react'
-import { DEFAULT_KEYMAP, keyToAction } from '../cube/controls'
+import {
+  DEFAULT_KEYMAP,
+  keyToAction,
+  shouldPreventDefault,
+} from '../cube/controls'
 import { useCubeGame } from '../cube/game'
 import { CubeScene } from '../cube/render'
+import { getViewFaces } from '../cube/view'
 
 export function PlayPage() {
   const { state, dispatch } = useCubeGame()
   const recentMoves = state.moveHistory.slice(-10)
+  const viewFaces = getViewFaces(state.viewOrientation)
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       const action = keyToAction(event)
       if (!action) return
 
-      event.preventDefault()
+      if (shouldPreventDefault(action)) event.preventDefault()
       dispatch(action)
     }
 
@@ -24,10 +30,14 @@ export function PlayPage() {
     <main className="play-page">
       <h1>Keyboard Rubik&apos;s Cube</h1>
       <p>
-        Stage 3: keyboard turns update the pure CubeState model immediately.
+        Stage 4: view controls rotate the rendered cube without changing
+        CubeState.
       </p>
       <section className="cube-panel" aria-label="3D cube preview">
-        <CubeScene cubeState={state.cubeState} />
+        <CubeScene
+          cubeState={state.cubeState}
+          viewOrientation={state.viewOrientation}
+        />
       </section>
       <section className="game-panel" aria-label="Cube controls and status">
         <div className="status-grid">
@@ -41,6 +51,36 @@ export function PlayPage() {
             Last action: <strong>{state.lastActionLabel}</strong>
           </p>
         </div>
+
+        <section className="view-status" aria-label="View orientation">
+          <h2>View orientation</h2>
+          <dl>
+            <div>
+              <dt>Up:</dt>
+              <dd>{viewFaces.up}</dd>
+            </div>
+            <div>
+              <dt>Front:</dt>
+              <dd>{viewFaces.front}</dd>
+            </div>
+            <div>
+              <dt>Left:</dt>
+              <dd>{viewFaces.left}</dd>
+            </div>
+            <div>
+              <dt>Right:</dt>
+              <dd>{viewFaces.right}</dd>
+            </div>
+            <div>
+              <dt>Down:</dt>
+              <dd>{viewFaces.down}</dd>
+            </div>
+            <div>
+              <dt>Back:</dt>
+              <dd>{viewFaces.back}</dd>
+            </div>
+          </dl>
+        </section>
 
         <div className="control-actions" aria-label="Cube actions">
           <button onClick={() => dispatch({ id: 'resetCube' })}>Reset</button>

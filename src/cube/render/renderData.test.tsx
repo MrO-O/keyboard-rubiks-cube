@@ -1,6 +1,7 @@
 import { Children, type ReactElement, type ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 import { createSolvedCube } from '../model'
+import { INITIAL_VIEW } from '../view'
 import type { Cubie } from '../model'
 import { CubeRenderer } from './CubeRenderer'
 import {
@@ -24,6 +25,7 @@ describe('cube render data', () => {
   it('CubeRenderer receives a solved cube and creates 26 cubie elements', () => {
     const element = CubeRenderer({
       cubeState: createSolvedCube(),
+      viewOrientation: INITIAL_VIEW,
     }) as ReactElement<{ children: ReactNode }>
 
     expect(Children.toArray(element.props.children)).toHaveLength(26)

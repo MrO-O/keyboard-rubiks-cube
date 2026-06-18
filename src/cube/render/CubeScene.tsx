@@ -1,14 +1,16 @@
 import { PerspectiveCamera } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import type { CubeState } from '../model'
+import type { ViewOrientation } from '../view'
 import { CubeRenderer } from './CubeRenderer'
 import { getDefaultCameraConfig } from './cameraConfig'
 
 interface CubeSceneProps {
   readonly cubeState: CubeState
+  readonly viewOrientation: ViewOrientation
 }
 
-export function CubeScene({ cubeState }: CubeSceneProps) {
+export function CubeScene({ cubeState, viewOrientation }: CubeSceneProps) {
   const camera = getDefaultCameraConfig()
 
   return (
@@ -25,7 +27,10 @@ export function CubeScene({ cubeState }: CubeSceneProps) {
       <ambientLight intensity={0.7} />
       <directionalLight position={[4, 5, 6]} intensity={1.4} />
       <directionalLight position={[-3, 2, -4]} intensity={0.35} />
-      <CubeRenderer cubeState={cubeState} />
+      <CubeRenderer
+        cubeState={cubeState}
+        viewOrientation={viewOrientation}
+      />
     </Canvas>
   )
 }

@@ -16,7 +16,7 @@ export function keyToAction(
 ): CubeAction | null {
   if (event.ctrlKey || event.metaKey || event.altKey) return null
 
-  const key = event.key.toUpperCase()
+  const key = normalizeKey(event.key)
   const binding = keymap.find((candidate) => candidate.key === key)
   if (!binding) return null
 
@@ -28,4 +28,9 @@ export function keyToAction(
   }
 
   return { id: binding.actionId }
+}
+
+function normalizeKey(key: string): string {
+  if (key === 'Space' || key === 'Spacebar') return ' '
+  return key.toUpperCase()
 }

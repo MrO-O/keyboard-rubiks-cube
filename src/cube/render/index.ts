@@ -1,5 +1,6 @@
 export { CubeScene } from './CubeScene'
 export { CubeRenderer } from './CubeRenderer'
+export { getCubeGroupRotation } from './viewTransform'
 export { CubieMesh } from './CubieMesh'
 export { StickerMesh } from './StickerMesh'
 export {

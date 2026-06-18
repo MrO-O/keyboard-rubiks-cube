@@ -11,7 +11,14 @@ export type TurnActionId =
 
 export type UtilityActionId = 'resetCube' | 'scrambleCube' | 'undoMove'
 
-export type ActionId = TurnActionId | UtilityActionId
+export type ViewActionId =
+  | 'rotateViewUp'
+  | 'rotateViewDown'
+  | 'rotateViewLeft'
+  | 'rotateViewRight'
+  | 'rollViewClockwise'
+
+export type ActionId = TurnActionId | ViewActionId | UtilityActionId
 
 export type CubeAction =
   | {
@@ -19,7 +26,7 @@ export type CubeAction =
       readonly direction: Direction
     }
   | {
-      readonly id: UtilityActionId
+      readonly id: ViewActionId | UtilityActionId
     }
 
 export interface KeyBinding {
@@ -51,4 +58,8 @@ export function getFaceForViewAction(
 
 export function formatMoveLabel(face: Face, direction: Direction): string {
   return direction === 1 ? face : `${face}'`
+}
+
+export function shouldPreventDefault(action: CubeAction | null): boolean {
+  return action !== null
 }

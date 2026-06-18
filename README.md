@@ -7,7 +7,7 @@ has no backend, account, cloud sync, or AI dependency.
 
 The project now contains the Vite/React/TypeScript shell, a pure TypeScript
 3x3x3 cubie engine, view-orientation mapping, a basic static Three.js renderer,
-and a no-animation keyboard input layer.
+and a no-animation keyboard input and view-orientation layer.
 
 The Play page renders the current `CubeState` as 26 visible cubies with colored
 stickers. U/I/H/J/K/L turn the top, bottom, left, right, front, and back faces
@@ -15,6 +15,15 @@ for the current `viewOrientation`; Shift + those keys turns the selected face in
 the inverse direction. R resets to solved, X scrambles, and Z undoes the last
 ordinary user turn. Scramble replaces the cube state and clears ordinary move
 history, so undo does not roll back a scramble in this first implementation.
+
+W/S rotate the view up/down, A/D rotate it left/right, and Space keeps the
+current front fixed while rolling the surrounding faces clockwise. These view
+actions only update `viewOrientation`: they do not change `CubeState`, increase
+the move count, enter move history, or get reverted by undo. U/I/H/J/K/L always
+resolve through the current view, so their physical target changes with the
+view. Reset restores both a solved cube and the initial U-up/F-front view;
+scramble preserves the current view while replacing the cube state and clearing
+ordinary move history.
 
 The renderer is intentionally read-only: cube position and sticker orientation
 come from `CubeState`, not from Three.js mesh state.
@@ -24,8 +33,8 @@ face remains centered toward the player while the U face is visible with
 perspective compression. Side-face peeking will be handled later by Q/E yaw
 offsets from this default view.
 
-This increment still does not contain turn animation, Q/E side view controls,
-WSAD view controls, SPACE roll, settings, or persistent storage.
+This increment still does not contain turn or view animation, Q/E temporary
+side view controls, settings, or persistent storage.
 
 ## Commands
 
@@ -55,12 +64,18 @@ face from outside the cube.
 - K: turn current view front face clockwise
 - L: turn current view back face clockwise
 - Shift + U/I/H/J/K/L: turn the same current-view face counterclockwise
-- R: reset to solved and clear ordinary move history
-- X: scramble from solved and clear ordinary move history
+- W/S: rotate the view up/down
+- A/D: rotate the view left/right
+- Space: keep the current front and roll the view clockwise
+- R: reset to solved, restore the initial view, and clear ordinary move history
+- X: scramble from solved, preserve the view, and clear ordinary move history
 - Z: undo the last ordinary user turn
+
+WSAD and Space do not increase move count or enter move history. Undo only
+reverts ordinary face turns and does not revert view actions.
 
 ## Planned work
 
-- Turn animations
-- WSAD, Q/E, and SPACE view controls
+- Turn and view animations
+- Q/E temporary side view controls
 - Settings page

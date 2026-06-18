@@ -1,6 +1,7 @@
 import type { CubeColor, Face } from '../model'
 
 export type Vector3Tuple = readonly [number, number, number]
+export type QuaternionTuple = readonly [number, number, number, number]
 
 export interface StickerTransform {
   readonly position: Vector3Tuple

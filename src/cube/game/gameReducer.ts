@@ -6,7 +6,15 @@ import {
   scramble,
   type CubeMove,
 } from '../model'
-import { INITIAL_VIEW, type ViewOrientation } from '../view'
+import {
+  INITIAL_VIEW,
+  rollViewClockwise,
+  rotateViewDown,
+  rotateViewLeft,
+  rotateViewRight,
+  rotateViewUp,
+  type ViewOrientation,
+} from '../view'
 import {
   formatMoveLabel,
   getFaceForViewAction,
@@ -41,15 +49,54 @@ export function gameReducer(
         direction: action.direction,
       })
 
+    case 'rotateViewUp':
+      return updateView(state, rotateViewUp(state.viewOrientation), 'View up')
+
+    case 'rotateViewDown':
+      return updateView(
+        state,
+        rotateViewDown(state.viewOrientation),
+        'View down',
+      )
+
+    case 'rotateViewLeft':
+      return updateView(
+        state,
+        rotateViewLeft(state.viewOrientation),
+        'View left',
+      )
+
+    case 'rotateViewRight':
+      return updateView(
+        state,
+        rotateViewRight(state.viewOrientation),
+        'View right',
+      )
+
+    case 'rollViewClockwise':
+      return updateView(
+        state,
+        rollViewClockwise(state.viewOrientation),
+        'Roll view',
+      )
+
     case 'undoMove':
       return undoLastMove(state)
 
     case 'resetCube':
-      return resetCube(state.viewOrientation)
+      return resetCube()
 
     case 'scrambleCube':
       return scrambleCube(state.viewOrientation)
   }
+}
+
+function updateView(
+  state: CubeGameState,
+  viewOrientation: ViewOrientation,
+  lastActionLabel: string,
+): CubeGameState {
+  return { ...state, viewOrientation, lastActionLabel }
 }
 
 function applyUserTurn(state: CubeGameState, move: CubeMove): CubeGameState {
@@ -80,11 +127,11 @@ function undoLastMove(state: CubeGameState): CubeGameState {
   }
 }
 
-function resetCube(viewOrientation: ViewOrientation): CubeGameState {
+function resetCube(): CubeGameState {
   const cubeState = createSolvedCube()
   return {
     cubeState,
-    viewOrientation,
+    viewOrientation: INITIAL_VIEW,
     moveHistory: [],
     lastActionLabel: 'Reset',
     isSolved: true,

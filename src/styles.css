@@ -81,15 +81,41 @@ button:hover {
 }
 
 .keyboard-help,
+.view-status,
 .move-history {
   display: grid;
   gap: 0.5rem;
 }
 
 .keyboard-help h2,
+.view-status h2,
 .move-history h2 {
   margin: 0;
   font-size: 1rem;
+}
+
+.view-status dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.view-status dl div {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  border: 1px solid #dbe3ef;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+}
+
+.view-status dt {
+  font-weight: 600;
+}
+
+.view-status dd {
+  margin: 0;
 }
 
 .keyboard-help ul,
