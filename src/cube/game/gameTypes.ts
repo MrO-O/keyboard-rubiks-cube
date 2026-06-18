@@ -23,6 +23,7 @@ export type CubeGameAction =
       readonly id: 'completeFaceTurnAnimation'
       readonly startedAt: number
       readonly completedAt: number
+      readonly nextAnimationDurationMs: number
     }
 
 export interface CubeGameState {

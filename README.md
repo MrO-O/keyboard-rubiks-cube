@@ -7,8 +7,8 @@ has no backend, account, cloud sync, or AI dependency.
 
 The project now contains the Vite/React/TypeScript shell, a pure TypeScript
 3x3x3 cubie engine, view-orientation mapping, a Three.js renderer, keyboard
-controls, temporary side peeking, animated face turns, and a one-turn input
-buffer.
+controls, temporary side peeking, animated face turns, a one-turn input buffer,
+and browser-local settings.
 
 The Play page renders the current `CubeState` as 26 visible cubies with colored
 stickers. U/I/H/J/K/L turn the top, bottom, left, right, front, and back faces
@@ -39,6 +39,18 @@ committed first. If the slot is occupied, the buffered move then starts a new
 animation from that committed state and the slot is cleared. Its history entry
 is added only when that second animation completes.
 
+The Settings page can rebind all face, view, peek, reset, scramble, and undo
+actions. Changes apply immediately and are stored under
+`keyboard-rubiks-cube.settings.v1` in `localStorage`. Duplicate bindings,
+Ctrl/Meta/Alt combinations, Escape, and Shift as a standalone key are rejected;
+Shift remains the fixed inverse modifier for face turns. Restore defaults
+reinstates the original keymap and normal 180ms turn timing.
+
+Turn animation speed has Fast (120ms), Normal (180ms), and Slow (260ms)
+options. A new face-turn animation captures the current setting when it starts,
+so an animation already in progress keeps its original duration. Settings stay
+only in the current browser and are not synchronized to an account or cloud.
+
 W/S rotate the view up/down, A/D rotate it left/right, and Space keeps the
 current front fixed while rolling the surrounding faces clockwise. These view
 actions only update `viewOrientation`: they do not change `CubeState`, increase
@@ -68,7 +80,7 @@ perspective compression. Q/E peeking adds a temporary 24-degree world-Y yaw to
 the current view transform without moving the camera.
 
 This increment still does not contain undo, scramble, view, or peek animation,
-configurable key bindings, settings, or persistent storage.
+settings import/export, accounts, cloud sync, or mobile gestures.
 
 ## Commands
 
@@ -89,7 +101,7 @@ Coordinates use `x = -1` for left and `x = 1` for right; `y = -1` for down and
 A clockwise move is a 90-degree clockwise turn when looking directly at that
 face from outside the cube.
 
-## Keyboard controls
+## Default keyboard controls
 
 - U: turn current view top face clockwise
 - I: turn current view bottom face clockwise
@@ -119,5 +131,4 @@ and pending turn.
 ## Planned work
 
 - Undo, scramble, and view animations
-- Configurable key bindings
-- Settings page
+- Mobile input design

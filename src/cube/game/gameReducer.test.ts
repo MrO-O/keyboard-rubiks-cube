@@ -15,6 +15,7 @@ function startFrontTurn(state = createInitialCubeGameState(), startedAt = 100) {
 function completeTurn(
   state: CubeGameState,
   completedAt?: number,
+  nextAnimationDurationMs = 180,
 ): CubeGameState {
   const startedAt = state.activeTurnAnimation?.startedAt
   if (startedAt === undefined) throw new Error('Expected an active animation')
@@ -22,6 +23,7 @@ function completeTurn(
     id: 'completeFaceTurnAnimation',
     startedAt,
     completedAt: completedAt ?? startedAt + 180,
+    nextAnimationDurationMs,
   })
 }
 
@@ -333,6 +335,7 @@ describe('cube game reducer', () => {
       id: 'completeFaceTurnAnimation',
       startedAt: active.activeTurnAnimation!.startedAt,
       completedAt: 280,
+      nextAnimationDurationMs: 180,
     })
 
     expect(reset.activeTurnAnimation).toBeNull()
@@ -351,5 +354,27 @@ describe('cube game reducer', () => {
     expect(peeking.peekDirection).toBe('showRight')
     expect(released.peekDirection).toBeNull()
     expect(released.activeTurnAnimation).not.toBeNull()
+  })
+
+  it('uses the configured duration for newly started animations', () => {
+    const fast = gameReducer(createInitialCubeGameState(), {
+      id: 'turnViewFront',
+      direction: 1,
+      startedAt: 100,
+      animationDurationMs: 120,
+    })
+
+    expect(fast.activeTurnAnimation?.durationMs).toBe(120)
+
+    const buffered = gameReducer(fast, {
+      id: 'turnViewRight',
+      direction: 1,
+      startedAt: 101,
+      animationDurationMs: 120,
+    })
+    const slowNext = completeTurn(buffered, 220, 260)
+
+    expect(fast.activeTurnAnimation?.durationMs).toBe(120)
+    expect(slowNext.activeTurnAnimation?.durationMs).toBe(260)
   })
 })

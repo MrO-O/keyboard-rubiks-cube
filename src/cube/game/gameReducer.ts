@@ -77,10 +77,16 @@ export function gameReducer(
           direction: action.direction,
         },
         action.startedAt ?? 0,
+        action.animationDurationMs ?? TURN_ANIMATION_MS,
       )
 
     case 'completeFaceTurnAnimation':
-      return completeUserTurn(state, action.startedAt, action.completedAt)
+      return completeUserTurn(
+        state,
+        action.startedAt,
+        action.completedAt,
+        action.nextAnimationDurationMs,
+      )
 
     case 'rotateViewUp':
       return updateView(state, rotateViewUp(state.viewOrientation), 'View up')
@@ -172,6 +178,7 @@ function startUserTurn(
   state: CubeGameState,
   move: CubeMove,
   startedAt: number,
+  durationMs: number,
 ): CubeGameState {
   const toState = applyMove(state.cubeState, move)
   const label = formatMoveLabel(move.face, move.direction)
@@ -182,7 +189,7 @@ function startUserTurn(
       fromState: state.cubeState,
       toState,
       startedAt,
-      durationMs: TURN_ANIMATION_MS,
+      durationMs,
     },
     pendingTurn: null,
     lastActionLabel: `Turning ${label}`,
@@ -201,6 +208,7 @@ function completeUserTurn(
   state: CubeGameState,
   startedAt: number,
   completedAt: number,
+  nextAnimationDurationMs: number,
 ): CubeGameState {
   const animation = state.activeTurnAnimation
   if (!animation || animation.startedAt !== startedAt) return state
@@ -217,7 +225,12 @@ function completeUserTurn(
 
   if (!state.pendingTurn) return committedState
 
-  return startUserTurn(committedState, state.pendingTurn, completedAt)
+  return startUserTurn(
+    committedState,
+    state.pendingTurn,
+    completedAt,
+    nextAnimationDurationMs,
+  )
 }
 
 function undoLastMove(state: CubeGameState): CubeGameState {

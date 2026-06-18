@@ -1,22 +1,28 @@
 import { useEffect } from 'react'
 import {
-  DEFAULT_KEYMAP,
   formatMoveLabel,
   keyToAction,
   shouldPreventDefault,
 } from '../cube/controls'
-import { useCubeGame } from '../cube/game'
+import type { CubeGameController } from '../cube/game'
 import { CubeScene } from '../cube/render'
 import { getViewFaces } from '../cube/view'
+import { useSettings } from '../settings'
 
-export function PlayPage() {
-  const { state, dispatch, completeTurnAnimation } = useCubeGame()
+interface PlayPageProps {
+  readonly game: CubeGameController
+  readonly onOpenSettings: () => void
+}
+
+export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
+  const { settings } = useSettings()
+  const { state, dispatch, completeTurnAnimation } = game
   const recentMoves = state.moveHistory.slice(-10)
   const viewFaces = getViewFaces(state.viewOrientation)
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      const action = keyToAction(event, 'keydown')
+      const action = keyToAction(event, 'keydown', settings.keymap)
       if (!action) return
 
       if (shouldPreventDefault(action)) event.preventDefault()
@@ -24,7 +30,7 @@ export function PlayPage() {
     }
 
     function handleKeyUp(event: KeyboardEvent) {
-      const action = keyToAction(event, 'keyup')
+      const action = keyToAction(event, 'keyup', settings.keymap)
       if (!action) return
 
       if (shouldPreventDefault(action)) event.preventDefault()
@@ -43,7 +49,7 @@ export function PlayPage() {
       window.removeEventListener('keyup', handleKeyUp)
       window.removeEventListener('blur', handleBlur)
     }
-  }, [dispatch])
+  }, [dispatch, settings.keymap])
 
   return (
     <main className="play-page">
@@ -52,6 +58,9 @@ export function PlayPage() {
         Stage 7: one-turn input buffer keeps the latest move pressed during an
         animation.
       </p>
+      <div className="page-navigation">
+        <button onClick={onOpenSettings}>Settings</button>
+      </div>
       <section className="cube-panel" aria-label="3D cube preview">
         <CubeScene
           cubeState={state.cubeState}
@@ -155,7 +164,7 @@ export function PlayPage() {
         <section className="keyboard-help" aria-label="Keyboard controls">
           <h2>Keyboard</h2>
           <ul>
-            {DEFAULT_KEYMAP.map((binding) => (
+            {settings.keymap.map((binding) => (
               <li key={binding.key}>{binding.label}</li>
             ))}
           </ul>

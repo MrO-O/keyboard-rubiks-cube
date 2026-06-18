@@ -1,34 +1,71 @@
 import type { KeyBinding } from './actions'
 
+const ACTION_DESCRIPTIONS: Readonly<Record<KeyBinding['actionId'], string>> = {
+  turnViewUp: 'turn top face',
+  turnViewDown: 'turn bottom face',
+  turnViewLeft: 'turn left face',
+  turnViewRight: 'turn right face',
+  turnViewFront: 'turn front face',
+  turnViewBack: 'turn back face',
+  rotateViewUp: 'rotate view up',
+  rotateViewDown: 'rotate view down',
+  rotateViewLeft: 'rotate view left',
+  rotateViewRight: 'rotate view right',
+  rollViewClockwise: 'roll current front clockwise',
+  startPeekRight: 'peek right side',
+  startPeekLeft: 'peek left side',
+  stopPeekRight: 'stop right peek',
+  stopPeekLeft: 'stop left peek',
+  clearPeek: 'clear peek',
+  resetCube: 'reset',
+  scrambleCube: 'scramble',
+  undoMove: 'undo',
+}
+
+export function displayBindingKey(key: string): string {
+  return key === ' ' ? 'Space' : key
+}
+
+export function formatKeyBindingLabel(binding: KeyBinding): string {
+  const key = displayBindingKey(binding.key)
+  const prefix =
+    binding.actionId === 'startPeekRight' ||
+    binding.actionId === 'startPeekLeft'
+      ? `Hold ${key}`
+      : key
+  return `${prefix}: ${ACTION_DESCRIPTIONS[binding.actionId]}`
+}
+
+function binding(value: Omit<KeyBinding, 'label'>): KeyBinding {
+  return { ...value, label: formatKeyBindingLabel({ ...value, label: '' }) }
+}
+
 export const DEFAULT_KEYMAP: readonly KeyBinding[] = [
-  { key: 'U', actionId: 'turnViewUp', label: 'U: turn top face' },
-  { key: 'I', actionId: 'turnViewDown', label: 'I: turn bottom face' },
-  { key: 'H', actionId: 'turnViewLeft', label: 'H: turn left face' },
-  { key: 'J', actionId: 'turnViewRight', label: 'J: turn right face' },
-  { key: 'K', actionId: 'turnViewFront', label: 'K: turn front face' },
-  { key: 'L', actionId: 'turnViewBack', label: 'L: turn back face' },
-  { key: 'W', actionId: 'rotateViewUp', label: 'W: rotate view up' },
-  { key: 'S', actionId: 'rotateViewDown', label: 'S: rotate view down' },
-  { key: 'A', actionId: 'rotateViewLeft', label: 'A: rotate view left' },
-  { key: 'D', actionId: 'rotateViewRight', label: 'D: rotate view right' },
-  {
+  binding({ key: 'U', actionId: 'turnViewUp' }),
+  binding({ key: 'I', actionId: 'turnViewDown' }),
+  binding({ key: 'H', actionId: 'turnViewLeft' }),
+  binding({ key: 'J', actionId: 'turnViewRight' }),
+  binding({ key: 'K', actionId: 'turnViewFront' }),
+  binding({ key: 'L', actionId: 'turnViewBack' }),
+  binding({ key: 'W', actionId: 'rotateViewUp' }),
+  binding({ key: 'S', actionId: 'rotateViewDown' }),
+  binding({ key: 'A', actionId: 'rotateViewLeft' }),
+  binding({ key: 'D', actionId: 'rotateViewRight' }),
+  binding({
     key: ' ',
     actionId: 'rollViewClockwise',
-    label: 'Space: roll current front clockwise',
-  },
-  {
+  }),
+  binding({
     key: 'Q',
     actionId: 'startPeekRight',
     keyUpActionId: 'stopPeekRight',
-    label: 'Hold Q: peek right side',
-  },
-  {
+  }),
+  binding({
     key: 'E',
     actionId: 'startPeekLeft',
     keyUpActionId: 'stopPeekLeft',
-    label: 'Hold E: peek left side',
-  },
-  { key: 'R', actionId: 'resetCube', label: 'R: reset' },
-  { key: 'X', actionId: 'scrambleCube', label: 'X: scramble' },
-  { key: 'Z', actionId: 'undoMove', label: 'Z: undo' },
+  }),
+  binding({ key: 'R', actionId: 'resetCube' }),
+  binding({ key: 'X', actionId: 'scrambleCube' }),
+  binding({ key: 'Z', actionId: 'undoMove' }),
 ] as const

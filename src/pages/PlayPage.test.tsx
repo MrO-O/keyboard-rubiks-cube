@@ -1,26 +1,26 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
+import { createSolvedCube, type CubeMove } from '../cube/model'
+import { INITIAL_VIEW } from '../cube/view'
+import {
+  SettingsProvider,
+  createDefaultSettings,
+  rebindAction,
+  type AppSettings,
+} from '../settings'
 
-const gameMock = vi.hoisted(() => ({
+const gameMock = {
   state: {
-    cubeState: { cubies: Array.from({ length: 26 }, () => ({})) },
-    viewOrientation: { up: 'U' as const, front: 'F' as const },
+    cubeState: createSolvedCube(),
+    viewOrientation: INITIAL_VIEW,
     peekDirection: null,
     activeTurnAnimation: null,
-    pendingTurn: null as { face: string; direction: 1 | -1 } | null,
+    pendingTurn: null as CubeMove | null,
     moveHistory: [],
     lastActionLabel: 'Ready',
     isSolved: true,
   },
-}))
-
-vi.mock('../cube/game', () => ({
-  useCubeGame: () => ({
-    state: gameMock.state,
-    dispatch: vi.fn(),
-    completeTurnAnimation: vi.fn(),
-  }),
-}))
+}
 
 vi.mock('../cube/render', () => ({
   CubeScene: (props: {
@@ -39,9 +39,24 @@ vi.mock('../cube/render', () => ({
 
 import { PlayPage } from './PlayPage'
 
+function renderPlay(settings = createDefaultSettings()) {
+  return renderToStaticMarkup(
+    <SettingsProvider initialSettings={settings}>
+      <PlayPage
+        game={{
+          state: gameMock.state,
+          dispatch: vi.fn(),
+          completeTurnAnimation: vi.fn(),
+        }}
+        onOpenSettings={vi.fn()}
+      />
+    </SettingsProvider>,
+  )
+}
+
 describe('PlayPage', () => {
   it('renders the keyboard instructions and game status', () => {
-    const markup = renderToStaticMarkup(<PlayPage />)
+    const markup = renderPlay()
 
     expect(markup).toContain('Keyboard Rubik&#x27;s Cube')
     expect(markup).toContain('Stage 7: one-turn input buffer')
@@ -63,15 +78,28 @@ describe('PlayPage', () => {
     expect(markup).toContain('idle')
     expect(markup).toContain('Buffered:')
     expect(markup).toContain('none')
+    expect(markup).toContain('Settings')
   })
 
   it('renders the buffered physical move', () => {
     gameMock.state.pendingTurn = { face: 'R', direction: -1 }
 
-    const markup = renderToStaticMarkup(<PlayPage />)
+    const markup = renderPlay()
 
     expect(markup).toContain('Buffered:')
     expect(markup).toContain('R&#x27;')
     gameMock.state.pendingTurn = null
+  })
+
+  it('renders the current custom keymap', () => {
+    const defaults = createDefaultSettings()
+    const result = rebindAction(defaults.keymap, 'turnViewFront', 'P')
+    if (!result.ok) throw new Error(result.error)
+    const settings: AppSettings = { ...defaults, keymap: result.keymap }
+
+    const markup = renderPlay(settings)
+
+    expect(markup).toContain('P: turn front face')
+    expect(markup).not.toContain('K: turn front face')
   })
 })
