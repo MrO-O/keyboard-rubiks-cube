@@ -3,6 +3,7 @@ export { CubeRenderer } from './CubeRenderer'
 export { CubieMesh } from './CubieMesh'
 export { StickerMesh } from './StickerMesh'
 export {
+  DEFAULT_CAMERA_FOV,
   DEFAULT_CAMERA_POSITION,
   DEFAULT_CAMERA_TARGET,
   getDefaultCameraConfig,

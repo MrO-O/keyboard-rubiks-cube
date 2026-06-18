@@ -15,13 +15,13 @@ CubeState -> renderer path can be verified. The renderer is intentionally
 read-only: cube position and sticker orientation come from `CubeState`, not from
 Three.js mesh state.
 
-The default render camera uses a front-facing top view: the F face is centered
-toward the player and the U face is visible from a slightly elevated angle.
-Side-face peeking will be handled later by Q/E yaw offsets from this default
-view.
+The default render camera uses a mild perspective front-facing top view: the F
+face remains centered toward the player while the U face is visible with
+perspective compression. Side-face peeking will be handled later by Q/E yaw
+offsets from this default view.
 
 This increment still does not contain turn animation, keyboard input, Q/E side
-view controls, settings, or persistent storage.
+view controls, WSAD view controls, settings, or persistent storage.
 
 ## Commands
 

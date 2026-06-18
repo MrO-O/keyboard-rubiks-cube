@@ -1,4 +1,4 @@
-import { OrthographicCamera } from '@react-three/drei'
+import { PerspectiveCamera } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import type { CubeState } from '../model'
 import { CubeRenderer } from './CubeRenderer'
@@ -14,15 +14,13 @@ export function CubeScene({ cubeState }: CubeSceneProps) {
   return (
     <Canvas className="cube-scene" dpr={[1, 2]}>
       <color attach="background" args={['#e5e7eb']} />
-      <OrthographicCamera
+      <PerspectiveCamera
         makeDefault
         position={camera.position}
-        zoom={camera.zoom}
+        fov={camera.fov}
         near={camera.near}
         far={camera.far}
-        onUpdate={(orthographicCamera) =>
-          orthographicCamera.lookAt(...camera.target)
-        }
+        onUpdate={(perspectiveCamera) => perspectiveCamera.lookAt(...camera.target)}
       />
       <ambientLight intensity={0.7} />
       <directionalLight position={[4, 5, 6]} intensity={1.4} />
