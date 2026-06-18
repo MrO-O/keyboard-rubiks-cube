@@ -16,6 +16,18 @@ export const DEFAULT_KEYMAP: readonly KeyBinding[] = [
     actionId: 'rollViewClockwise',
     label: 'Space: roll current front clockwise',
   },
+  {
+    key: 'Q',
+    actionId: 'startPeekRight',
+    keyUpActionId: 'stopPeekRight',
+    label: 'Hold Q: peek right side',
+  },
+  {
+    key: 'E',
+    actionId: 'startPeekLeft',
+    keyUpActionId: 'stopPeekLeft',
+    label: 'Hold E: peek left side',
+  },
   { key: 'R', actionId: 'resetCube', label: 'R: reset' },
   { key: 'X', actionId: 'scrambleCube', label: 'X: scramble' },
   { key: 'Z', actionId: 'undoMove', label: 'Z: undo' },

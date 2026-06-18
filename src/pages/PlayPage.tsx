@@ -15,28 +15,46 @@ export function PlayPage() {
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      const action = keyToAction(event)
+      const action = keyToAction(event, 'keydown')
       if (!action) return
 
       if (shouldPreventDefault(action)) event.preventDefault()
       dispatch(action)
     }
 
+    function handleKeyUp(event: KeyboardEvent) {
+      const action = keyToAction(event, 'keyup')
+      if (!action) return
+
+      if (shouldPreventDefault(action)) event.preventDefault()
+      dispatch(action)
+    }
+
+    function handleBlur() {
+      dispatch({ id: 'clearPeek' })
+    }
+
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    window.addEventListener('blur', handleBlur)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+      window.removeEventListener('blur', handleBlur)
+    }
   }, [dispatch])
 
   return (
     <main className="play-page">
       <h1>Keyboard Rubik&apos;s Cube</h1>
       <p>
-        Stage 4: view controls rotate the rendered cube without changing
-        CubeState.
+        Stage 5: temporary side peek changes only the rendered display angle.
       </p>
       <section className="cube-panel" aria-label="3D cube preview">
         <CubeScene
           cubeState={state.cubeState}
           viewOrientation={state.viewOrientation}
+          peekDirection={state.peekDirection}
         />
       </section>
       <section className="game-panel" aria-label="Cube controls and status">
@@ -49,6 +67,16 @@ export function PlayPage() {
           </p>
           <p>
             Last action: <strong>{state.lastActionLabel}</strong>
+          </p>
+          <p>
+            Peek:{' '}
+            <strong>
+              {state.peekDirection === 'showRight'
+                ? 'showing right side'
+                : state.peekDirection === 'showLeft'
+                  ? 'showing left side'
+                  : 'none'}
+            </strong>
           </p>
         </div>
 

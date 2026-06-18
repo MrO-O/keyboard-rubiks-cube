@@ -21,6 +21,24 @@ describe('keyboard controls', () => {
     expect(keyToAction({ key })).toEqual({ id: actionId })
   })
 
+  it.each([
+    ['Q', 'startPeekRight'],
+    ['E', 'startPeekLeft'],
+  ])('maps %s keydown to %s', (key, actionId) => {
+    expect(keyToAction({ key }, 'keydown')).toEqual({ id: actionId })
+  })
+
+  it.each([
+    ['Q', 'stopPeekRight'],
+    ['E', 'stopPeekLeft'],
+  ])('maps %s keyup to %s', (key, actionId) => {
+    expect(keyToAction({ key }, 'keyup')).toEqual({ id: actionId })
+  })
+
+  it('does not emit keyup actions for regular bindings', () => {
+    expect(keyToAction({ key: 'K' }, 'keyup')).toBeNull()
+  })
+
   it('recognizes regular key presses', () => {
     expect(keyToAction({ key: 'k' })).toEqual({
       id: 'turnViewFront',
@@ -42,6 +60,9 @@ describe('keyboard controls', () => {
     { key: ' ', ctrlKey: true },
     { key: ' ', metaKey: true },
     { key: ' ', altKey: true },
+    { key: 'Q', ctrlKey: true },
+    { key: 'E', metaKey: true },
+    { key: 'Q', altKey: true },
   ])('does not trigger cube actions for modified shortcuts', (event) => {
     expect(keyToAction(event)).toBeNull()
   })

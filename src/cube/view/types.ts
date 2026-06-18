@@ -13,3 +13,5 @@ export interface ViewFaces {
   readonly front: Face
   readonly back: Face
 }
+
+export type PeekDirection = 'showRight' | 'showLeft' | null

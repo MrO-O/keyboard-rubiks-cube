@@ -7,7 +7,7 @@ has no backend, account, cloud sync, or AI dependency.
 
 The project now contains the Vite/React/TypeScript shell, a pure TypeScript
 3x3x3 cubie engine, view-orientation mapping, a basic static Three.js renderer,
-and a no-animation keyboard input and view-orientation layer.
+and a no-animation keyboard input, view-orientation, and temporary peek layer.
 
 The Play page renders the current `CubeState` as 26 visible cubies with colored
 stickers. U/I/H/J/K/L turn the top, bottom, left, right, front, and back faces
@@ -25,16 +25,26 @@ view. Reset restores both a solved cube and the initial U-up/F-front view;
 scramble preserves the current view while replacing the cube state and clearing
 ordinary move history.
 
+Holding Q temporarily yaws the rendered cube to show more of the current right
+side; holding E does the same for the current left side. Releasing the active
+peek key restores the main view. Peek state is separate from both `CubeState`
+and `viewOrientation`, so it does not affect U/I/H/J/K/L face mapping, move
+count, history, or undo. Reset and scramble clear an active peek.
+
+If Q and E overlap, the latest keydown wins. Releasing a non-active peek key has
+no effect; releasing the active key clears the peek instead of restoring an
+earlier still-held key. Losing browser focus also clears peek state.
+
 The renderer is intentionally read-only: cube position and sticker orientation
 come from `CubeState`, not from Three.js mesh state.
 
 The default render camera uses a mild perspective front-facing top view: the F
 face remains centered toward the player while the U face is visible with
-perspective compression. Side-face peeking will be handled later by Q/E yaw
-offsets from this default view.
+perspective compression. Q/E peeking adds a temporary 24-degree world-Y yaw to
+the current view transform without moving the camera.
 
-This increment still does not contain turn or view animation, Q/E temporary
-side view controls, settings, or persistent storage.
+This increment still does not contain turn or view animation, configurable key
+bindings, settings, or persistent storage.
 
 ## Commands
 
@@ -67,15 +77,18 @@ face from outside the cube.
 - W/S: rotate the view up/down
 - A/D: rotate the view left/right
 - Space: keep the current front and roll the view clockwise
+- Hold Q: temporarily peek at the current right side
+- Hold E: temporarily peek at the current left side
 - R: reset to solved, restore the initial view, and clear ordinary move history
 - X: scramble from solved, preserve the view, and clear ordinary move history
 - Z: undo the last ordinary user turn
 
-WSAD and Space do not increase move count or enter move history. Undo only
-reverts ordinary face turns and does not revert view actions.
+WSAD, Space, and Q/E do not increase move count or enter move history. Undo only
+reverts ordinary face turns and does not revert view or peek actions. Q/E do not
+change `viewOrientation`, so face-turn keys continue to target the main view.
 
 ## Planned work
 
 - Turn and view animations
-- Q/E temporary side view controls
+- Configurable key bindings
 - Settings page

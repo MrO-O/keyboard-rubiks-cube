@@ -124,6 +124,71 @@ describe('cube game reducer', () => {
     expect(scrambled.viewOrientation).toEqual(rotated.viewOrientation)
   })
 
+  it.each([
+    ['startPeekRight', 'showRight'],
+    ['startPeekLeft', 'showLeft'],
+  ] as const)('%s sets peekDirection without changing game state', (id, peek) => {
+    const initial = createInitialCubeGameState()
+    const serialized = serializeCube(initial.cubeState)
+    const next = gameReducer(initial, { id })
+
+    expect(next.peekDirection).toBe(peek)
+    expect(serializeCube(next.cubeState)).toBe(serialized)
+    expect(next.viewOrientation).toEqual(initial.viewOrientation)
+    expect(next.moveHistory).toBe(initial.moveHistory)
+  })
+
+  it('uses the latest peek key and clears only the active direction', () => {
+    const right = gameReducer(createInitialCubeGameState(), {
+      id: 'startPeekRight',
+    })
+    const left = gameReducer(right, { id: 'startPeekLeft' })
+    const releaseInactive = gameReducer(left, { id: 'stopPeekRight' })
+    const releaseActive = gameReducer(releaseInactive, { id: 'stopPeekLeft' })
+
+    expect(left.peekDirection).toBe('showLeft')
+    expect(releaseInactive.peekDirection).toBe('showLeft')
+    expect(releaseActive.peekDirection).toBeNull()
+  })
+
+  it.each(['showRight', 'showLeft'] as const)(
+    'still turns the current physical front while peeking %s',
+    (peekDirection) => {
+      const rotated = gameReducer(createInitialCubeGameState(), {
+        id: 'rotateViewLeft',
+      })
+      const peeking = gameReducer(rotated, {
+        id:
+          peekDirection === 'showRight' ? 'startPeekRight' : 'startPeekLeft',
+      })
+      const moved = gameReducer(peeking, {
+        id: 'turnViewFront',
+        direction: 1,
+      })
+
+      expect(moved.moveHistory[0]?.move.face).toBe(
+        getViewFaces(rotated.viewOrientation).front,
+      )
+      expect(moved.peekDirection).toBe(peekDirection)
+    },
+  )
+
+  it('reset and scramble clear peek while undo preserves it', () => {
+    const moved = gameReducer(createInitialCubeGameState(), {
+      id: 'turnViewFront',
+      direction: 1,
+    })
+    const peeking = gameReducer(moved, { id: 'startPeekRight' })
+
+    expect(gameReducer(peeking, { id: 'undoMove' }).peekDirection).toBe(
+      'showRight',
+    )
+    expect(gameReducer(peeking, { id: 'resetCube' }).peekDirection).toBeNull()
+    expect(
+      gameReducer(peeking, { id: 'scrambleCube' }).peekDirection,
+    ).toBeNull()
+  })
+
   it('scrambleCube usually creates an unsolved cube and clears move history', () => {
     let index = 0
     const values = [0.01, 0.25, 0.21, 0.75, 0.41, 0.25, 0.61, 0.75]

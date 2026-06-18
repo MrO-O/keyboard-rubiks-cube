@@ -27,6 +27,7 @@ export function createInitialCubeGameState(): CubeGameState {
   return {
     cubeState,
     viewOrientation: INITIAL_VIEW,
+    peekDirection: null,
     moveHistory: [],
     lastActionLabel: 'Ready',
     isSolved: true,
@@ -80,6 +81,29 @@ export function gameReducer(
         'Roll view',
       )
 
+    case 'startPeekRight':
+      return {
+        ...state,
+        peekDirection: 'showRight',
+        lastActionLabel: 'Peek right',
+      }
+
+    case 'startPeekLeft':
+      return {
+        ...state,
+        peekDirection: 'showLeft',
+        lastActionLabel: 'Peek left',
+      }
+
+    case 'stopPeekRight':
+      return stopPeek(state, 'showRight')
+
+    case 'stopPeekLeft':
+      return stopPeek(state, 'showLeft')
+
+    case 'clearPeek':
+      return clearPeek(state)
+
     case 'undoMove':
       return undoLastMove(state)
 
@@ -89,6 +113,19 @@ export function gameReducer(
     case 'scrambleCube':
       return scrambleCube(state.viewOrientation)
   }
+}
+
+function stopPeek(
+  state: CubeGameState,
+  direction: Exclude<CubeGameState['peekDirection'], null>,
+): CubeGameState {
+  if (state.peekDirection !== direction) return state
+  return clearPeek(state)
+}
+
+function clearPeek(state: CubeGameState): CubeGameState {
+  if (!state.peekDirection) return state
+  return { ...state, peekDirection: null, lastActionLabel: 'Peek cleared' }
 }
 
 function updateView(
@@ -132,6 +169,7 @@ function resetCube(): CubeGameState {
   return {
     cubeState,
     viewOrientation: INITIAL_VIEW,
+    peekDirection: null,
     moveHistory: [],
     lastActionLabel: 'Reset',
     isSolved: true,
@@ -143,6 +181,7 @@ function scrambleCube(viewOrientation: ViewOrientation): CubeGameState {
   return {
     cubeState,
     viewOrientation,
+    peekDirection: null,
     moveHistory: [],
     lastActionLabel: 'Scramble',
     isSolved: isSolved(cubeState),

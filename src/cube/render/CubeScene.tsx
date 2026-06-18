@@ -1,16 +1,21 @@
 import { PerspectiveCamera } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import type { CubeState } from '../model'
-import type { ViewOrientation } from '../view'
+import type { PeekDirection, ViewOrientation } from '../view'
 import { CubeRenderer } from './CubeRenderer'
 import { getDefaultCameraConfig } from './cameraConfig'
 
 interface CubeSceneProps {
   readonly cubeState: CubeState
   readonly viewOrientation: ViewOrientation
+  readonly peekDirection: PeekDirection
 }
 
-export function CubeScene({ cubeState, viewOrientation }: CubeSceneProps) {
+export function CubeScene({
+  cubeState,
+  viewOrientation,
+  peekDirection,
+}: CubeSceneProps) {
   const camera = getDefaultCameraConfig()
 
   return (
@@ -30,6 +35,7 @@ export function CubeScene({ cubeState, viewOrientation }: CubeSceneProps) {
       <CubeRenderer
         cubeState={cubeState}
         viewOrientation={viewOrientation}
+        peekDirection={peekDirection}
       />
     </Canvas>
   )

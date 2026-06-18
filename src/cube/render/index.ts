@@ -1,6 +1,11 @@
 export { CubeScene } from './CubeScene'
 export { CubeRenderer } from './CubeRenderer'
-export { getCubeGroupRotation } from './viewTransform'
+export {
+  PEEK_YAW_DEGREES,
+  getCubeGroupRotation,
+  getDisplayRotation,
+  getPeekYawRadians,
+} from './viewTransform'
 export { CubieMesh } from './CubieMesh'
 export { StickerMesh } from './StickerMesh'
 export {

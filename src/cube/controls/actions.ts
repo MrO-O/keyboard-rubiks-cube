@@ -18,7 +18,18 @@ export type ViewActionId =
   | 'rotateViewRight'
   | 'rollViewClockwise'
 
-export type ActionId = TurnActionId | ViewActionId | UtilityActionId
+export type PeekActionId =
+  | 'startPeekRight'
+  | 'startPeekLeft'
+  | 'stopPeekRight'
+  | 'stopPeekLeft'
+  | 'clearPeek'
+
+export type ActionId =
+  | TurnActionId
+  | ViewActionId
+  | PeekActionId
+  | UtilityActionId
 
 export type CubeAction =
   | {
@@ -26,12 +37,13 @@ export type CubeAction =
       readonly direction: Direction
     }
   | {
-      readonly id: ViewActionId | UtilityActionId
+      readonly id: ViewActionId | PeekActionId | UtilityActionId
     }
 
 export interface KeyBinding {
   readonly key: string
   readonly actionId: ActionId
+  readonly keyUpActionId?: ActionId
   readonly label: string
 }
 

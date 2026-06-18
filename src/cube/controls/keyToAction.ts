@@ -10,8 +10,11 @@ export interface KeyboardActionEvent {
   readonly altKey?: boolean
 }
 
+export type KeyboardEventType = 'keydown' | 'keyup'
+
 export function keyToAction(
   event: KeyboardActionEvent,
+  eventType: KeyboardEventType = 'keydown',
   keymap: readonly KeyBinding[] = DEFAULT_KEYMAP,
 ): CubeAction | null {
   if (event.ctrlKey || event.metaKey || event.altKey) return null
@@ -20,14 +23,18 @@ export function keyToAction(
   const binding = keymap.find((candidate) => candidate.key === key)
   if (!binding) return null
 
-  if (isTurnActionId(binding.actionId)) {
+  const actionId =
+    eventType === 'keydown' ? binding.actionId : binding.keyUpActionId
+  if (!actionId) return null
+
+  if (isTurnActionId(actionId)) {
     return {
-      id: binding.actionId,
+      id: actionId,
       direction: event.shiftKey ? -1 : 1,
     }
   }
 
-  return { id: binding.actionId }
+  return { id: actionId }
 }
 
 function normalizeKey(key: string): string {
