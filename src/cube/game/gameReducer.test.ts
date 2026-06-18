@@ -12,10 +12,17 @@ function startFrontTurn(state = createInitialCubeGameState(), startedAt = 100) {
   })
 }
 
-function completeTurn(state: CubeGameState): CubeGameState {
+function completeTurn(
+  state: CubeGameState,
+  completedAt?: number,
+): CubeGameState {
   const startedAt = state.activeTurnAnimation?.startedAt
   if (startedAt === undefined) throw new Error('Expected an active animation')
-  return gameReducer(state, { id: 'completeFaceTurnAnimation', startedAt })
+  return gameReducer(state, {
+    id: 'completeFaceTurnAnimation',
+    startedAt,
+    completedAt: completedAt ?? startedAt + 180,
+  })
 }
 
 describe('cube game reducer', () => {
@@ -234,20 +241,89 @@ describe('cube game reducer', () => {
     vi.restoreAllMocks()
   })
 
-  it('ignores face, view, scramble, and undo actions during animation', () => {
+  it('buffers the latest concrete face turn without committing it', () => {
     const active = startFrontTurn()
+    const first = gameReducer(active, {
+      id: 'turnViewRight',
+      direction: 1,
+      startedAt: 101,
+    })
+    const latest = gameReducer(first, {
+      id: 'turnViewUp',
+      direction: -1,
+      startedAt: 102,
+    })
 
-    expect(
-      gameReducer(active, {
-        id: 'turnViewUp',
-        direction: 1,
-        startedAt: 101,
-      }),
-    ).toBe(active)
+    expect(first.pendingTurn).toEqual({ face: 'R', direction: 1 })
+    expect(latest.pendingTurn).toEqual({ face: 'U', direction: -1 })
+    expect(latest.cubeState).toBe(active.cubeState)
+    expect(latest.moveHistory).toHaveLength(0)
+  })
+
+  it('resolves a buffered turn against viewOrientation at keydown time', () => {
+    const rotated = gameReducer(createInitialCubeGameState(), {
+      id: 'rotateViewLeft',
+    })
+    const active = gameReducer(rotated, {
+      id: 'turnViewUp',
+      direction: 1,
+      startedAt: 100,
+    })
+    const buffered = gameReducer(active, {
+      id: 'turnViewFront',
+      direction: -1,
+      startedAt: 101,
+    })
+
+    expect(buffered.pendingTurn).toEqual({
+      face: getViewFaces(rotated.viewOrientation).front,
+      direction: -1,
+    })
+    expect(buffered.viewOrientation).toEqual(rotated.viewOrientation)
+  })
+
+  it('starts the buffered turn from the committed state and clears the slot', () => {
+    const first = startFrontTurn()
+    const buffered = gameReducer(first, {
+      id: 'turnViewRight',
+      direction: 1,
+      startedAt: 101,
+    })
+    const second = completeTurn(buffered, 280)
+
+    expect(second.moveHistory.map((entry) => entry.move)).toEqual([
+      { face: 'F', direction: 1 },
+    ])
+    expect(second.pendingTurn).toBeNull()
+    expect(second.activeTurnAnimation).toMatchObject({
+      move: { face: 'R', direction: 1 },
+      fromState: first.activeTurnAnimation!.toState,
+      startedAt: 280,
+    })
+    expect(serializeCube(second.cubeState)).toBe(
+      serializeCube(first.activeTurnAnimation!.toState),
+    )
+
+    const completed = completeTurn(second, 460)
+    expect(completed.activeTurnAnimation).toBeNull()
+    expect(completed.moveHistory.map((entry) => entry.move)).toEqual([
+      { face: 'F', direction: 1 },
+      { face: 'R', direction: 1 },
+    ])
+  })
+
+  it('ignores view, scramble, and undo actions without clearing the buffer', () => {
+    const active = gameReducer(startFrontTurn(), {
+      id: 'turnViewUp',
+      direction: 1,
+      startedAt: 101,
+    })
+
     expect(gameReducer(active, { id: 'rotateViewLeft' })).toBe(active)
     expect(gameReducer(active, { id: 'rollViewClockwise' })).toBe(active)
     expect(gameReducer(active, { id: 'scrambleCube' })).toBe(active)
     expect(gameReducer(active, { id: 'undoMove' })).toBe(active)
+    expect(active.pendingTurn).toEqual({ face: 'U', direction: 1 })
   })
 
   it('reset cancels animation and restores solved state', () => {
@@ -256,9 +332,11 @@ describe('cube game reducer', () => {
     const staleCompletion = gameReducer(reset, {
       id: 'completeFaceTurnAnimation',
       startedAt: active.activeTurnAnimation!.startedAt,
+      completedAt: 280,
     })
 
     expect(reset.activeTurnAnimation).toBeNull()
+    expect(reset.pendingTurn).toBeNull()
     expect(serializeCube(reset.cubeState)).toBe(
       serializeCube(createSolvedCube()),
     )

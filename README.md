@@ -7,7 +7,8 @@ has no backend, account, cloud sync, or AI dependency.
 
 The project now contains the Vite/React/TypeScript shell, a pure TypeScript
 3x3x3 cubie engine, view-orientation mapping, a Three.js renderer, keyboard
-controls, temporary side peeking, and animated face turns.
+controls, temporary side peeking, animated face turns, and a one-turn input
+buffer.
 
 The Play page renders the current `CubeState` as 26 visible cubies with colored
 stickers. U/I/H/J/K/L turn the top, bottom, left, right, front, and back faces
@@ -24,9 +25,19 @@ affected cubies from `fromState`; `CubeState` and move history switch to
 temporary presentation data rather than a second logical state source.
 
 While a face turn is animating, additional face turns, WSAD/Space view changes,
-scramble, and undo are ignored. Q/E peek start and release remain available so
-peek state cannot become stuck. Reset immediately cancels the animation and
-restores the solved cube. Undo and scramble remain instantaneous operations.
+scramble, and undo follow separate input policies. One additional face turn is
+stored as a concrete physical `CubeMove` in the single-slot `pendingTurn`
+buffer. Repeated face-turn inputs overwrite that slot, so the latest input wins.
+WSAD/Space, scramble, and undo remain ignored. Q/E peek start and release remain
+available so peek state cannot become stuck. Reset immediately cancels the
+animation, clears `pendingTurn`, and restores the solved cube. Undo and scramble
+remain instantaneous operations while idle.
+
+`pendingTurn` does not change `CubeState`, `viewOrientation`, or move history.
+When the current animation completes, its `toState` and history entry are
+committed first. If the slot is occupied, the buffered move then starts a new
+animation from that committed state and the slot is cleared. Its history entry
+is added only when that second animation completes.
 
 W/S rotate the view up/down, A/D rotate it left/right, and Space keeps the
 current front fixed while rolling the surrounding faces clockwise. These view
@@ -100,9 +111,10 @@ WSAD, Space, and Q/E do not increase move count or enter move history. Undo only
 reverts ordinary face turns and does not revert view or peek actions. Q/E do not
 change `viewOrientation`, so face-turn keys continue to target the main view.
 
-During a face-turn animation, new face turns and view controls are ignored.
-Undo and scramble are also ignored until completion and remain instantaneous
-when invoked while idle. Reset always cancels an active animation.
+During a face-turn animation, the latest additional face turn is buffered in a
+single slot. View controls, undo, and scramble are ignored until completion and
+do not alter the buffered move. Reset always cancels both the active animation
+and pending turn.
 
 ## Planned work
 

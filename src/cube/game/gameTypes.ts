@@ -22,6 +22,7 @@ export type CubeGameAction =
   | {
       readonly id: 'completeFaceTurnAnimation'
       readonly startedAt: number
+      readonly completedAt: number
     }
 
 export interface CubeGameState {
@@ -29,6 +30,7 @@ export interface CubeGameState {
   readonly viewOrientation: ViewOrientation
   readonly peekDirection: PeekDirection
   readonly activeTurnAnimation: ActiveTurnAnimation | null
+  readonly pendingTurn: CubeMove | null
   readonly moveHistory: readonly MoveHistoryEntry[]
   readonly lastActionLabel: string
   readonly isSolved: boolean

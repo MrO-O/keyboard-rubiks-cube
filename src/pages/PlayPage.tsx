@@ -49,7 +49,8 @@ export function PlayPage() {
     <main className="play-page">
       <h1>Keyboard Rubik&apos;s Cube</h1>
       <p>
-        Stage 6: animated face turns commit CubeState after the turn completes.
+        Stage 7: one-turn input buffer keeps the latest move pressed during an
+        animation.
       </p>
       <section className="cube-panel" aria-label="3D cube preview">
         <CubeScene
@@ -90,6 +91,17 @@ export function PlayPage() {
                     state.activeTurnAnimation.move.direction,
                   )
                 : 'idle'}
+            </strong>
+          </p>
+          <p>
+            Buffered:{' '}
+            <strong>
+              {state.pendingTurn
+                ? formatMoveLabel(
+                    state.pendingTurn.face,
+                    state.pendingTurn.direction,
+                  )
+                : 'none'}
             </strong>
           </p>
         </div>

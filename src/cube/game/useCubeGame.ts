@@ -18,7 +18,11 @@ export function useCubeGame() {
   }, [])
 
   const completeTurnAnimation = useCallback((startedAt: number) => {
-    dispatch({ id: 'completeFaceTurnAnimation', startedAt })
+    dispatch({
+      id: 'completeFaceTurnAnimation',
+      startedAt,
+      completedAt: performance.now(),
+    })
   }, [])
 
   return {

@@ -29,6 +29,7 @@ export function createInitialCubeGameState(): CubeGameState {
     viewOrientation: INITIAL_VIEW,
     peekDirection: null,
     activeTurnAnimation: null,
+    pendingTurn: null,
     moveHistory: [],
     lastActionLabel: 'Ready',
     isSolved: true,
@@ -51,6 +52,13 @@ export function gameReducer(
   state: CubeGameState,
   action: CubeGameAction,
 ): CubeGameState {
+  if (state.activeTurnAnimation && 'direction' in action) {
+    return bufferUserTurn(state, {
+      face: getFaceForViewAction(state.viewOrientation, action.id),
+      direction: action.direction,
+    })
+  }
+
   if (state.activeTurnAnimation && isBlockedDuringAnimation(action.id)) {
     return state
   }
@@ -72,7 +80,7 @@ export function gameReducer(
       )
 
     case 'completeFaceTurnAnimation':
-      return completeUserTurn(state, action.startedAt)
+      return completeUserTurn(state, action.startedAt, action.completedAt)
 
     case 'rotateViewUp':
       return updateView(state, rotateViewUp(state.viewOrientation), 'View up')
@@ -176,19 +184,29 @@ function startUserTurn(
       startedAt,
       durationMs: TURN_ANIMATION_MS,
     },
+    pendingTurn: null,
     lastActionLabel: `Turning ${label}`,
+  }
+}
+
+function bufferUserTurn(state: CubeGameState, move: CubeMove): CubeGameState {
+  return {
+    ...state,
+    pendingTurn: move,
+    lastActionLabel: `Buffered ${formatMoveLabel(move.face, move.direction)}`,
   }
 }
 
 function completeUserTurn(
   state: CubeGameState,
   startedAt: number,
+  completedAt: number,
 ): CubeGameState {
   const animation = state.activeTurnAnimation
   if (!animation || animation.startedAt !== startedAt) return state
 
   const label = formatMoveLabel(animation.move.face, animation.move.direction)
-  return {
+  const committedState: CubeGameState = {
     ...state,
     cubeState: animation.toState,
     activeTurnAnimation: null,
@@ -196,6 +214,10 @@ function completeUserTurn(
     lastActionLabel: `Move ${label}`,
     isSolved: isSolved(animation.toState),
   }
+
+  if (!state.pendingTurn) return committedState
+
+  return startUserTurn(committedState, state.pendingTurn, completedAt)
 }
 
 function undoLastMove(state: CubeGameState): CubeGameState {
@@ -221,6 +243,7 @@ function resetCube(): CubeGameState {
     viewOrientation: INITIAL_VIEW,
     peekDirection: null,
     activeTurnAnimation: null,
+    pendingTurn: null,
     moveHistory: [],
     lastActionLabel: 'Reset',
     isSolved: true,
@@ -234,6 +257,7 @@ function scrambleCube(viewOrientation: ViewOrientation): CubeGameState {
     viewOrientation,
     peekDirection: null,
     activeTurnAnimation: null,
+    pendingTurn: null,
     moveHistory: [],
     lastActionLabel: 'Scramble',
     isSolved: isSolved(cubeState),
