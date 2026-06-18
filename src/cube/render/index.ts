@@ -6,6 +6,13 @@ export {
   getDisplayRotation,
   getPeekYawRadians,
 } from './viewTransform'
+export {
+  clampProgress,
+  easeTurnProgress,
+  getTurnAngleRadians,
+  getTurnRenderGroups,
+  getTurnRotation,
+} from './turnAnimation'
 export { CubieMesh } from './CubieMesh'
 export { StickerMesh } from './StickerMesh'
 export {

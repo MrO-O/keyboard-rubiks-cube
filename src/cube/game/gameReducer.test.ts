@@ -1,31 +1,58 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createSolvedCube, isSolved, serializeCube } from '../model'
+import { applyMove, createSolvedCube, isSolved, serializeCube } from '../model'
 import { INITIAL_VIEW, getViewFaces } from '../view'
 import { createInitialCubeGameState, gameReducer } from './gameReducer'
+import type { CubeGameState } from './gameTypes'
+
+function startFrontTurn(state = createInitialCubeGameState(), startedAt = 100) {
+  return gameReducer(state, {
+    id: 'turnViewFront',
+    direction: 1,
+    startedAt,
+  })
+}
+
+function completeTurn(state: CubeGameState): CubeGameState {
+  const startedAt = state.activeTurnAnimation?.startedAt
+  if (startedAt === undefined) throw new Error('Expected an active animation')
+  return gameReducer(state, { id: 'completeFaceTurnAnimation', startedAt })
+}
 
 describe('cube game reducer', () => {
-  it('changes serialized CubeState after a keyboard turn', () => {
+  it('creates an animation while keeping CubeState at fromState', () => {
     const initial = createInitialCubeGameState()
-    const next = gameReducer(initial, { id: 'turnViewFront', direction: 1 })
+    const next = startFrontTurn(initial)
 
-    expect(serializeCube(next.cubeState)).not.toBe(
+    expect(next.activeTurnAnimation).toMatchObject({
+      move: { face: 'F', direction: 1 },
+      fromState: initial.cubeState,
+      startedAt: 100,
+    })
+    expect(serializeCube(next.cubeState)).toBe(serializeCube(initial.cubeState))
+    expect(serializeCube(next.activeTurnAnimation!.toState)).not.toBe(
       serializeCube(initial.cubeState),
     )
+    expect(serializeCube(next.activeTurnAnimation!.toState)).toBe(
+      serializeCube(applyMove(initial.cubeState, { face: 'F', direction: 1 })),
+    )
+    expect(next.moveHistory).toHaveLength(0)
   })
 
-  it('records user moves in history', () => {
-    const next = gameReducer(createInitialCubeGameState(), {
-      id: 'turnViewFront',
-      direction: 1,
-    })
+  it('commits CubeState and history only when animation completes', () => {
+    const active = startFrontTurn()
+    const next = completeTurn(active)
 
+    expect(serializeCube(next.cubeState)).toBe(
+      serializeCube(active.activeTurnAnimation!.toState),
+    )
+    expect(next.activeTurnAnimation).toBeNull()
     expect(next.moveHistory).toHaveLength(1)
     expect(next.moveHistory[0]?.move).toEqual({ face: 'F', direction: 1 })
   })
 
   it('undoMove returns to the previous state', () => {
     const initial = createInitialCubeGameState()
-    const moved = gameReducer(initial, { id: 'turnViewFront', direction: 1 })
+    const moved = completeTurn(startFrontTurn(initial))
     const undone = gameReducer(moved, { id: 'undoMove' })
 
     expect(serializeCube(undone.cubeState)).toBe(
@@ -41,10 +68,13 @@ describe('cube game reducer', () => {
     const moved = gameReducer(rotated, {
       id: 'turnViewFront',
       direction: 1,
+      startedAt: 100,
     })
     const reset = gameReducer(moved, { id: 'resetCube' })
 
-    expect(serializeCube(reset.cubeState)).toBe(serializeCube(createSolvedCube()))
+    expect(serializeCube(reset.cubeState)).toBe(
+      serializeCube(createSolvedCube()),
+    )
     expect(reset.isSolved).toBe(true)
     expect(reset.moveHistory).toHaveLength(0)
     expect(reset.viewOrientation).toEqual(INITIAL_VIEW)
@@ -98,14 +128,11 @@ describe('cube game reducer', () => {
     })
 
     expect(physicalFront).not.toBe('F')
-    expect(moved.moveHistory[0]?.move.face).toBe(physicalFront)
+    expect(moved.activeTurnAnimation?.move.face).toBe(physicalFront)
   })
 
   it('undoes the last face turn without reverting view orientation', () => {
-    const moved = gameReducer(createInitialCubeGameState(), {
-      id: 'turnViewFront',
-      direction: 1,
-    })
+    const moved = completeTurn(startFrontTurn())
     const rotated = gameReducer(moved, { id: 'rotateViewLeft' })
     const undone = gameReducer(rotated, { id: 'undoMove' })
 
@@ -127,16 +154,19 @@ describe('cube game reducer', () => {
   it.each([
     ['startPeekRight', 'showRight'],
     ['startPeekLeft', 'showLeft'],
-  ] as const)('%s sets peekDirection without changing game state', (id, peek) => {
-    const initial = createInitialCubeGameState()
-    const serialized = serializeCube(initial.cubeState)
-    const next = gameReducer(initial, { id })
+  ] as const)(
+    '%s sets peekDirection without changing game state',
+    (id, peek) => {
+      const initial = createInitialCubeGameState()
+      const serialized = serializeCube(initial.cubeState)
+      const next = gameReducer(initial, { id })
 
-    expect(next.peekDirection).toBe(peek)
-    expect(serializeCube(next.cubeState)).toBe(serialized)
-    expect(next.viewOrientation).toEqual(initial.viewOrientation)
-    expect(next.moveHistory).toBe(initial.moveHistory)
-  })
+      expect(next.peekDirection).toBe(peek)
+      expect(serializeCube(next.cubeState)).toBe(serialized)
+      expect(next.viewOrientation).toEqual(initial.viewOrientation)
+      expect(next.moveHistory).toBe(initial.moveHistory)
+    },
+  )
 
   it('uses the latest peek key and clears only the active direction', () => {
     const right = gameReducer(createInitialCubeGameState(), {
@@ -158,15 +188,15 @@ describe('cube game reducer', () => {
         id: 'rotateViewLeft',
       })
       const peeking = gameReducer(rotated, {
-        id:
-          peekDirection === 'showRight' ? 'startPeekRight' : 'startPeekLeft',
+        id: peekDirection === 'showRight' ? 'startPeekRight' : 'startPeekLeft',
       })
       const moved = gameReducer(peeking, {
         id: 'turnViewFront',
         direction: 1,
+        startedAt: 100,
       })
 
-      expect(moved.moveHistory[0]?.move.face).toBe(
+      expect(moved.activeTurnAnimation?.move.face).toBe(
         getViewFaces(rotated.viewOrientation).front,
       )
       expect(moved.peekDirection).toBe(peekDirection)
@@ -174,10 +204,7 @@ describe('cube game reducer', () => {
   )
 
   it('reset and scramble clear peek while undo preserves it', () => {
-    const moved = gameReducer(createInitialCubeGameState(), {
-      id: 'turnViewFront',
-      direction: 1,
-    })
+    const moved = completeTurn(startFrontTurn())
     const peeking = gameReducer(moved, { id: 'startPeekRight' })
 
     expect(gameReducer(peeking, { id: 'undoMove' }).peekDirection).toBe(
@@ -198,15 +225,53 @@ describe('cube game reducer', () => {
       return value
     })
 
-    const moved = gameReducer(createInitialCubeGameState(), {
-      id: 'turnViewFront',
-      direction: 1,
-    })
+    const moved = completeTurn(startFrontTurn())
     const scrambled = gameReducer(moved, { id: 'scrambleCube' })
 
     expect(isSolved(scrambled.cubeState)).toBe(false)
     expect(scrambled.moveHistory).toHaveLength(0)
 
     vi.restoreAllMocks()
+  })
+
+  it('ignores face, view, scramble, and undo actions during animation', () => {
+    const active = startFrontTurn()
+
+    expect(
+      gameReducer(active, {
+        id: 'turnViewUp',
+        direction: 1,
+        startedAt: 101,
+      }),
+    ).toBe(active)
+    expect(gameReducer(active, { id: 'rotateViewLeft' })).toBe(active)
+    expect(gameReducer(active, { id: 'rollViewClockwise' })).toBe(active)
+    expect(gameReducer(active, { id: 'scrambleCube' })).toBe(active)
+    expect(gameReducer(active, { id: 'undoMove' })).toBe(active)
+  })
+
+  it('reset cancels animation and restores solved state', () => {
+    const active = startFrontTurn()
+    const reset = gameReducer(active, { id: 'resetCube' })
+    const staleCompletion = gameReducer(reset, {
+      id: 'completeFaceTurnAnimation',
+      startedAt: active.activeTurnAnimation!.startedAt,
+    })
+
+    expect(reset.activeTurnAnimation).toBeNull()
+    expect(serializeCube(reset.cubeState)).toBe(
+      serializeCube(createSolvedCube()),
+    )
+    expect(staleCompletion).toBe(reset)
+  })
+
+  it('allows peek changes and keyup while animation is active', () => {
+    const peeking = gameReducer(startFrontTurn(), { id: 'startPeekRight' })
+    const released = gameReducer(peeking, { id: 'stopPeekRight' })
+
+    expect(peeking.activeTurnAnimation).not.toBeNull()
+    expect(peeking.peekDirection).toBe('showRight')
+    expect(released.peekDirection).toBeNull()
+    expect(released.activeTurnAnimation).not.toBeNull()
   })
 })

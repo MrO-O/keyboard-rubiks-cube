@@ -1,4 +1,9 @@
-import { FACE_LAYERS, faceFromVector, FACE_VECTORS } from './constants'
+import { faceFromVector, FACE_VECTORS } from './constants'
+import {
+  getCubieIsInMoveLayer,
+  getMoveAxisAndLayer,
+  getMoveQuarterTurn,
+} from './moveGeometry'
 import type {
   Axis,
   Coordinate,
@@ -55,12 +60,13 @@ export function rotateFace(
   face: Face,
   direction: Direction,
 ): CubeState {
-  const { axis, coordinate } = FACE_LAYERS[face]
-  const quarterTurn = (-coordinate * direction) as Direction
+  const move = { face, direction }
+  const { axis } = getMoveAxisAndLayer(move)
+  const quarterTurn = getMoveQuarterTurn(move)
 
   return {
     cubies: state.cubies.map((cubie) => {
-      if (cubie.position[axis] !== coordinate) return cubie
+      if (!getCubieIsInMoveLayer(cubie, move)) return cubie
       return {
         ...cubie,
         position: rotateVector(cubie.position, axis, quarterTurn),

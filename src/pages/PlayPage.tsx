@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import {
   DEFAULT_KEYMAP,
+  formatMoveLabel,
   keyToAction,
   shouldPreventDefault,
 } from '../cube/controls'
@@ -9,7 +10,7 @@ import { CubeScene } from '../cube/render'
 import { getViewFaces } from '../cube/view'
 
 export function PlayPage() {
-  const { state, dispatch } = useCubeGame()
+  const { state, dispatch, completeTurnAnimation } = useCubeGame()
   const recentMoves = state.moveHistory.slice(-10)
   const viewFaces = getViewFaces(state.viewOrientation)
 
@@ -48,13 +49,15 @@ export function PlayPage() {
     <main className="play-page">
       <h1>Keyboard Rubik&apos;s Cube</h1>
       <p>
-        Stage 5: temporary side peek changes only the rendered display angle.
+        Stage 6: animated face turns commit CubeState after the turn completes.
       </p>
       <section className="cube-panel" aria-label="3D cube preview">
         <CubeScene
           cubeState={state.cubeState}
           viewOrientation={state.viewOrientation}
           peekDirection={state.peekDirection}
+          activeTurnAnimation={state.activeTurnAnimation}
+          onTurnAnimationComplete={completeTurnAnimation}
         />
       </section>
       <section className="game-panel" aria-label="Cube controls and status">
@@ -76,6 +79,17 @@ export function PlayPage() {
                 : state.peekDirection === 'showLeft'
                   ? 'showing left side'
                   : 'none'}
+            </strong>
+          </p>
+          <p>
+            Turning:{' '}
+            <strong>
+              {state.activeTurnAnimation
+                ? formatMoveLabel(
+                    state.activeTurnAnimation.move.face,
+                    state.activeTurnAnimation.move.direction,
+                  )
+                : 'idle'}
             </strong>
           </p>
         </div>
@@ -112,10 +126,18 @@ export function PlayPage() {
 
         <div className="control-actions" aria-label="Cube actions">
           <button onClick={() => dispatch({ id: 'resetCube' })}>Reset</button>
-          <button onClick={() => dispatch({ id: 'scrambleCube' })}>
+          <button
+            disabled={Boolean(state.activeTurnAnimation)}
+            onClick={() => dispatch({ id: 'scrambleCube' })}
+          >
             Scramble
           </button>
-          <button onClick={() => dispatch({ id: 'undoMove' })}>Undo</button>
+          <button
+            disabled={Boolean(state.activeTurnAnimation)}
+            onClick={() => dispatch({ id: 'undoMove' })}
+          >
+            Undo
+          </button>
         </div>
 
         <section className="keyboard-help" aria-label="Keyboard controls">

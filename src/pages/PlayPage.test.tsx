@@ -6,6 +6,7 @@ vi.mock('../cube/render', () => ({
     cubeState: { cubies: readonly unknown[] }
     viewOrientation: { up: string; front: string }
     peekDirection: string | null
+    activeTurnAnimation: null
   }) => (
     <div>
       Mock cube scene: {props.cubeState.cubies.length} cubies,{' '}
@@ -22,7 +23,7 @@ describe('PlayPage', () => {
     const markup = renderToStaticMarkup(<PlayPage />)
 
     expect(markup).toContain('Keyboard Rubik&#x27;s Cube')
-    expect(markup).toContain('Stage 5: temporary side peek')
+    expect(markup).toContain('Stage 6: animated face turns')
     expect(markup).toContain('Move count:')
     expect(markup).toContain('Solved:')
     expect(markup).toContain('K: turn front face')
@@ -37,5 +38,7 @@ describe('PlayPage', () => {
     expect(markup).toContain('Hold E: peek left side')
     expect(markup).toContain('Peek:')
     expect(markup).toContain('none')
+    expect(markup).toContain('Turning:')
+    expect(markup).toContain('idle')
   })
 })

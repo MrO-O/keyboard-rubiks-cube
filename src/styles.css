@@ -31,6 +31,11 @@ button:hover {
   background: #e2e8f0;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .play-page {
   display: grid;
   gap: 1rem;

@@ -27,6 +27,8 @@ describe('cube render data', () => {
       cubeState: createSolvedCube(),
       viewOrientation: INITIAL_VIEW,
       peekDirection: null,
+      activeTurnAnimation: null,
+      animationProgress: 0,
     }) as ReactElement<{ children: ReactNode }>
 
     expect(Children.toArray(element.props.children)).toHaveLength(26)

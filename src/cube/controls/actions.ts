@@ -35,6 +35,7 @@ export type CubeAction =
   | {
       readonly id: TurnActionId
       readonly direction: Direction
+      readonly startedAt?: number
     }
   | {
       readonly id: ViewActionId | PeekActionId | UtilityActionId
