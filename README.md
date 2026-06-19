@@ -8,7 +8,8 @@ has no backend, account, cloud sync, or AI dependency.
 The project now contains the Vite/React/TypeScript shell, a pure TypeScript
 3x3x3 cubie engine, view-orientation mapping, a Three.js renderer, keyboard
 controls, temporary side peeking, animated face turns, a one-turn input buffer,
-browser-local settings, and automatic game-state persistence.
+browser-local settings, automatic game-state persistence, and installable PWA
+support. It can be deployed as a static site with GitHub Pages.
 
 The Play page renders the current `CubeState` as 26 visible cubies with colored
 stickers. U/I/H/J/K/L turn the top, bottom, left, right, front, and back faces
@@ -96,15 +97,74 @@ the current view transform without moving the camera.
 This increment still does not contain undo, scramble, view, or peek animation,
 settings or game import/export, accounts, cloud sync, or mobile gestures.
 
-## Commands
+## Run locally
 
 ```bash
 npm install
 npm run dev
-npm run test
+```
+
+Local development always uses the root base path `/`, regardless of the Pages
+deployment setting.
+
+## Build
+
+```bash
 npm run build
+npm run preview
+```
+
+The production build emits the app, web manifest, generated service worker, and
+static icons into `dist`. The initial in-repository icons are basic SVG Rubik's
+Cube artwork with 192x192 and 512x512 manifest entries.
+
+Run the project checks separately when changing behavior or deployment config:
+
+```bash
+npm run test
 npm run lint
 ```
+
+## Deploy to GitHub Pages
+
+1. Create a GitHub repository for the project.
+2. Push `main` to GitHub.
+3. In repository **Settings → Pages**, choose **GitHub Actions** as the source.
+4. Push to `main`; `.github/workflows/deploy.yml` installs dependencies, builds
+   the repository subpath version, uploads `dist`, and deploys it with official
+   GitHub Pages actions.
+5. After the workflow completes, open the GitHub Pages URL shown by the deploy
+   job.
+6. Bookmark that URL for normal browser use.
+7. In a supported browser, use its install action to install the app as a PWA.
+
+The workflow sets `VITE_BASE_PATH` to `/<repository-name>/`, without hardcoding
+a GitHub username. For another production host or a manual Pages build, set the
+variable explicitly before building, for example:
+
+```bash
+VITE_BASE_PATH=/keyboard-rubiks-cube/ npm run build
+```
+
+PowerShell equivalent:
+
+```powershell
+$env:VITE_BASE_PATH='/keyboard-rubiks-cube/'
+npm run build
+```
+
+The app currently switches between Play and Settings with local React state; it
+does not use URL routes. GitHub Pages therefore needs neither a `HashRouter` nor
+a custom 404 fallback.
+
+## Local data warning
+
+Game state and settings are stored separately in the current browser's
+`localStorage`. GitHub Pages only hosts application code and does not receive or
+store user data. Local state does not migrate automatically when changing
+browsers, devices, deployment URLs, or after clearing browser data. Installing
+the PWA does not add an account or synchronization layer; there is currently no
+cloud sync.
 
 ## Cube conventions
 

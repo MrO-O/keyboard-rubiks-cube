@@ -153,9 +153,9 @@ export function SettingsPage({
 
       <section className="settings-section settings-reset">
         <h2>Game data</h2>
-        <p>Game state is saved locally in this browser.</p>
-        <p>Clearing browser data may delete the saved cube state.</p>
-        <p>Settings and game state are stored separately.</p>
+        <p>This app stores game state and settings locally in this browser.</p>
+        <p>Installing as a PWA does not create cloud sync.</p>
+        <p>Clearing browser data may remove saved game state and settings.</p>
         <button onClick={onClearSavedGame}>Clear saved game</button>
       </section>
     </main>

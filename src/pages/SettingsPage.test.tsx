@@ -20,8 +20,13 @@ describe('SettingsPage', () => {
     expect(markup).toContain('Slow')
     expect(markup).toContain('Restore defaults')
     expect(markup).toContain('Game data')
-    expect(markup).toContain('Game state is saved locally in this browser')
-    expect(markup).toContain('Settings and game state are stored separately')
+    expect(markup).toContain(
+      'This app stores game state and settings locally in this browser',
+    )
+    expect(markup).toContain('Installing as a PWA does not create cloud sync')
+    expect(markup).toContain(
+      'Clearing browser data may remove saved game state and settings',
+    )
     expect(markup).toContain('Clear saved game')
     expect(markup).toContain('Back to play')
   })
