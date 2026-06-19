@@ -12,6 +12,9 @@ export function App() {
   return page === 'play' ? (
     <PlayPage game={game} onOpenSettings={() => setPage('settings')} />
   ) : (
-    <SettingsPage onBack={() => setPage('play')} />
+    <SettingsPage
+      onBack={() => setPage('play')}
+      onClearSavedGame={game.clearSavedGame}
+    />
   )
 }

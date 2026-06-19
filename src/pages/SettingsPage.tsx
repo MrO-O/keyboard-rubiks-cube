@@ -12,6 +12,7 @@ import {
 
 interface SettingsPageProps {
   readonly onBack: () => void
+  readonly onClearSavedGame: () => void
 }
 
 const SPEED_LABELS: Readonly<Record<AnimationDurationMs, string>> = {
@@ -20,7 +21,10 @@ const SPEED_LABELS: Readonly<Record<AnimationDurationMs, string>> = {
   260: 'Slow',
 }
 
-export function SettingsPage({ onBack }: SettingsPageProps) {
+export function SettingsPage({
+  onBack,
+  onClearSavedGame,
+}: SettingsPageProps) {
   const { settings, updateSettings, restoreDefaults } = useSettings()
   const [editingAction, setEditingAction] = useState<BindableActionId | null>(
     null,
@@ -145,6 +149,14 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
       <section className="settings-section settings-reset">
         <h2>Defaults</h2>
         <button onClick={restore}>Restore defaults</button>
+      </section>
+
+      <section className="settings-section settings-reset">
+        <h2>Game data</h2>
+        <p>Game state is saved locally in this browser.</p>
+        <p>Clearing browser data may delete the saved cube state.</p>
+        <p>Settings and game state are stored separately.</p>
+        <button onClick={onClearSavedGame}>Clear saved game</button>
       </section>
     </main>
   )

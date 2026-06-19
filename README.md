@@ -8,7 +8,7 @@ has no backend, account, cloud sync, or AI dependency.
 The project now contains the Vite/React/TypeScript shell, a pure TypeScript
 3x3x3 cubie engine, view-orientation mapping, a Three.js renderer, keyboard
 controls, temporary side peeking, animated face turns, a one-turn input buffer,
-and browser-local settings.
+browser-local settings, and automatic game-state persistence.
 
 The Play page renders the current `CubeState` as 26 visible cubies with colored
 stickers. U/I/H/J/K/L turn the top, bottom, left, right, front, and back faces
@@ -51,6 +51,20 @@ options. A new face-turn animation captures the current setting when it starts,
 so an animation already in progress keeps its original duration. Settings stay
 only in the current browser and are not synchronized to an account or cloud.
 
+The last stable game state is automatically stored in `localStorage` under
+`keyboard-rubiks-cube.game.v1`. It includes `cubeState`, `viewOrientation`, and
+ordinary `moveHistory`; settings remain separate under
+`keyboard-rubiks-cube.settings.v1`. Refreshing restores the last stable state,
+including the move count. Face-turn animation state, `pendingTurn`,
+`peekDirection`, and other temporary UI state are never included in the saved
+payload, so refreshing during an animation resumes from the most recently
+committed cube state.
+
+The Settings page can clear the saved game. This also resets the current game
+to solved and removes the game key without changing settings. Clearing browser
+data can also delete both local records. There is currently no account or cloud
+synchronization.
+
 W/S rotate the view up/down, A/D rotate it left/right, and Space keeps the
 current front fixed while rolling the surrounding faces clockwise. These view
 actions only update `viewOrientation`: they do not change `CubeState`, increase
@@ -80,7 +94,7 @@ perspective compression. Q/E peeking adds a temporary 24-degree world-Y yaw to
 the current view transform without moving the camera.
 
 This increment still does not contain undo, scramble, view, or peek animation,
-settings import/export, accounts, cloud sync, or mobile gestures.
+settings or game import/export, accounts, cloud sync, or mobile gestures.
 
 ## Commands
 

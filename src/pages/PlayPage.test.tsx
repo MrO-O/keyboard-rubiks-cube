@@ -47,6 +47,7 @@ function renderPlay(settings = createDefaultSettings()) {
           state: gameMock.state,
           dispatch: vi.fn(),
           completeTurnAnimation: vi.fn(),
+          clearSavedGame: vi.fn(),
         }}
         onOpenSettings={vi.fn()}
       />
@@ -59,7 +60,7 @@ describe('PlayPage', () => {
     const markup = renderPlay()
 
     expect(markup).toContain('Keyboard Rubik&#x27;s Cube')
-    expect(markup).toContain('Stage 7: one-turn input buffer')
+    expect(markup).toContain('Game autosaved locally')
     expect(markup).toContain('Move count:')
     expect(markup).toContain('Solved:')
     expect(markup).toContain('K: turn front face')

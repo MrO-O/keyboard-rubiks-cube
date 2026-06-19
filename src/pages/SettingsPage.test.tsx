@@ -7,7 +7,7 @@ describe('SettingsPage', () => {
   it('shows key bindings, speed choices, and restore controls', () => {
     const markup = renderToStaticMarkup(
       <SettingsProvider>
-        <SettingsPage onBack={vi.fn()} />
+        <SettingsPage onBack={vi.fn()} onClearSavedGame={vi.fn()} />
       </SettingsProvider>,
     )
 
@@ -19,6 +19,10 @@ describe('SettingsPage', () => {
     expect(markup).toContain('Normal')
     expect(markup).toContain('Slow')
     expect(markup).toContain('Restore defaults')
+    expect(markup).toContain('Game data')
+    expect(markup).toContain('Game state is saved locally in this browser')
+    expect(markup).toContain('Settings and game state are stored separately')
+    expect(markup).toContain('Clear saved game')
     expect(markup).toContain('Back to play')
   })
 })

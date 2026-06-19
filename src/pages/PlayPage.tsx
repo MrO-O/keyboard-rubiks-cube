@@ -54,10 +54,7 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
   return (
     <main className="play-page">
       <h1>Keyboard Rubik&apos;s Cube</h1>
-      <p>
-        Stage 7: one-turn input buffer keeps the latest move pressed during an
-        animation.
-      </p>
+      <p>Game autosaved locally. Refresh to continue from the last stable state.</p>
       <div className="page-navigation">
         <button onClick={onOpenSettings}>Settings</button>
       </div>
