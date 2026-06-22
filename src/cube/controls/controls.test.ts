@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { INITIAL_VIEW } from '../view'
-import { getFaceForViewAction, shouldPreventDefault } from './actions'
-import { DEFAULT_KEYMAP } from './defaultKeymap'
+import {
+  formatMoveLabel,
+  getFaceForViewAction,
+  shouldPreventDefault,
+} from './actions'
+import { DEFAULT_KEYMAP, DEFAULT_WIDE_TURN_MODIFIER_KEY } from './defaultKeymap'
 import { keyToAction } from './keyToAction'
 
 describe('keyboard controls', () => {
@@ -43,6 +47,7 @@ describe('keyboard controls', () => {
     expect(keyToAction({ key: 'k' })).toEqual({
       id: 'turnViewFront',
       direction: 1,
+      layers: 1,
     })
   })
 
@@ -50,7 +55,50 @@ describe('keyboard controls', () => {
     expect(keyToAction({ key: 'K', shiftKey: true })).toEqual({
       id: 'turnViewFront',
       direction: -1,
+      layers: 1,
     })
+  })
+
+  it('uses semicolon as the default wide modifier', () => {
+    expect(DEFAULT_WIDE_TURN_MODIFIER_KEY).toBe(';')
+    expect(keyToAction({ key: ';' }, 'keydown')).toEqual({
+      id: 'startWideTurnModifier',
+    })
+    expect(keyToAction({ key: ';' }, 'keyup')).toEqual({
+      id: 'stopWideTurnModifier',
+    })
+  })
+
+  it('formats single and wide move notation', () => {
+    expect(formatMoveLabel('U', 1)).toBe('U')
+    expect(formatMoveLabel('U', -1)).toBe("U'")
+    expect(formatMoveLabel('U', 1, 2)).toBe('Uw')
+    expect(formatMoveLabel('U', -1, 2)).toBe("Uw'")
+  })
+
+  it('creates clockwise and inverse wide turns while the modifier is active', () => {
+    expect(keyToAction({ key: 'K' }, 'keydown', DEFAULT_KEYMAP, ';', true)).toEqual({
+      id: 'turnViewFront',
+      direction: 1,
+      layers: 2,
+    })
+    expect(
+      keyToAction(
+        { key: 'K', shiftKey: true },
+        'keydown',
+        DEFAULT_KEYMAP,
+        ';',
+        true,
+      ),
+    ).toEqual({ id: 'turnViewFront', direction: -1, layers: 2 })
+  })
+
+  it.each([
+    { key: ';', ctrlKey: true },
+    { key: ';', metaKey: true },
+    { key: ';', altKey: true },
+  ])('does not activate wide mode for browser modifiers', (event) => {
+    expect(keyToAction(event)).toBeNull()
   })
 
   it.each([

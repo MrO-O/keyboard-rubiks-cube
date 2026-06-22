@@ -1,6 +1,7 @@
 export type Face = 'U' | 'D' | 'L' | 'R' | 'F' | 'B'
 export type Axis = 'x' | 'y' | 'z'
 export type Direction = 1 | -1
+export type MoveLayers = 1 | 2
 export type Coordinate = -1 | 0 | 1
 
 export interface Vec3 {
@@ -25,6 +26,7 @@ export interface CubeState {
 export interface CubeMove {
   readonly face: Face
   readonly direction: Direction
+  readonly layers?: MoveLayers
 }
 
 export interface ScrambleOptions {

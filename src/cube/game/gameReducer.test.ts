@@ -28,6 +28,61 @@ function completeTurn(
 }
 
 describe('cube game reducer', () => {
+  it('tracks wide modifier state without changing cube or history', () => {
+    const initial = createInitialCubeGameState()
+    const active = gameReducer(initial, { id: 'startWideTurnModifier' })
+    const stopped = gameReducer(active, { id: 'stopWideTurnModifier' })
+
+    expect(active.wideTurnModifierActive).toBe(true)
+    expect(active.cubeState).toBe(initial.cubeState)
+    expect(active.moveHistory).toBe(initial.moveHistory)
+    expect(stopped.wideTurnModifierActive).toBe(false)
+  })
+
+  it('starts, commits, and records a wide turn', () => {
+    const initial = createInitialCubeGameState()
+    const active = gameReducer(initial, {
+      id: 'turnViewUp',
+      direction: 1,
+      layers: 2,
+      startedAt: 100,
+    })
+    const completed = completeTurn(active)
+
+    expect(active.activeTurnAnimation?.move).toEqual({
+      face: 'U',
+      direction: 1,
+      layers: 2,
+    })
+    expect(completed.moveHistory[0]).toMatchObject({
+      move: { face: 'U', direction: 1, layers: 2 },
+      label: 'Uw',
+    })
+  })
+
+  it('buffers a wide turn in pendingTurn', () => {
+    const active = startFrontTurn()
+    const buffered = gameReducer(active, {
+      id: 'turnViewRight',
+      direction: -1,
+      layers: 2,
+      startedAt: 101,
+    })
+    expect(buffered.pendingTurn).toEqual({
+      face: 'R',
+      direction: -1,
+      layers: 2,
+    })
+  })
+
+  it('reset clears the wide modifier state', () => {
+    const active = gameReducer(createInitialCubeGameState(), {
+      id: 'startWideTurnModifier',
+    })
+    expect(gameReducer(active, { id: 'resetCube' }).wideTurnModifierActive).toBe(
+      false,
+    )
+  })
   it('creates an animation while keeping CubeState at fromState', () => {
     const initial = createInitialCubeGameState()
     const next = startFrontTurn(initial)

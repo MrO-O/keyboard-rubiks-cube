@@ -9,7 +9,8 @@ The project now contains the Vite/React/TypeScript shell, a pure TypeScript
 3x3x3 cubie engine, view-orientation mapping, a Three.js renderer, keyboard
 controls, temporary side peeking, animated face turns, a one-turn input buffer,
 browser-local settings, automatic game-state persistence, and installable PWA
-support. It can be deployed as a static site with GitHub Pages.
+support. Single-layer and two-layer wide turns use the same pure cubie engine.
+The app can be deployed as a static site with GitHub Pages.
 
 The Play page renders the current `CubeState` as 26 visible cubies with colored
 stickers. U/I/H/J/K/L turn the top, bottom, left, right, front, and back faces
@@ -184,6 +185,8 @@ face from outside the cube.
 - K: turn current view front face clockwise
 - L: turn current view back face clockwise
 - Shift + U/I/H/J/K/L: turn the same current-view face counterclockwise
+- Hold ; + U/I/H/J/K/L: turn that face and its adjacent middle layer
+- Hold ; + Shift + U/I/H/J/K/L: perform the inverse two-layer turn
 - W/S: rotate the view up/down
 - A/D: rotate the view left/right
 - Space: keep the current front and roll the view clockwise
@@ -192,6 +195,15 @@ face from outside the cube.
 - R: reset to solved, restore the initial view, and clear ordinary move history
 - X: scramble from solved, preserve the view, and clear ordinary move history
 - Z: undo the last ordinary user turn
+
+`;` is the default wide turn modifier and can be changed in Settings. Ctrl,
+Meta, and Alt are not accepted for this binding because they conflict with
+browser and operating-system shortcuts. The configured modifier must also be
+different from every ordinary action key.
+
+Move history uses standard wide notation: `Uw`, `Fw`, and `Rw` mean a clockwise
+two-layer turn viewed from that outer face, while `Uw'`, `Fw'`, and `Rw'` are
+their inverses. Ordinary moves remain `U`, `F`, `R`, and so on.
 
 WSAD, Space, and Q/E do not increase move count or enter move history. Undo only
 reverts ordinary face turns and does not revert view or peek actions. Q/E do not

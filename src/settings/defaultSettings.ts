@@ -1,4 +1,8 @@
-import { DEFAULT_KEYMAP, type ActionId } from '../cube/controls'
+import {
+  DEFAULT_KEYMAP,
+  DEFAULT_WIDE_TURN_MODIFIER_KEY,
+  type ActionId,
+} from '../cube/controls'
 import type { AppSettings } from './types'
 
 export type BindableActionId = Exclude<
@@ -29,5 +33,6 @@ export function createDefaultSettings(): AppSettings {
   return {
     keymap: DEFAULT_KEYMAP.map((binding) => ({ ...binding })),
     animationDurationMs: 180,
+    wideTurnModifierKey: DEFAULT_WIDE_TURN_MODIFIER_KEY,
   }
 }

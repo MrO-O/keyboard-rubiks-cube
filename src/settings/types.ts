@@ -6,6 +6,7 @@ export type AnimationDurationMs = (typeof ALLOWED_ANIMATION_DURATIONS)[number]
 export interface AppSettings {
   readonly keymap: readonly KeyBinding[]
   readonly animationDurationMs: AnimationDurationMs
+  readonly wideTurnModifierKey: string
 }
 
 export interface SettingsStorage {

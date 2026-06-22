@@ -1,5 +1,7 @@
 import type { KeyBinding } from './actions'
 
+export const DEFAULT_WIDE_TURN_MODIFIER_KEY = ';'
+
 const ACTION_DESCRIPTIONS: Readonly<Record<KeyBinding['actionId'], string>> = {
   turnViewUp: 'turn top face',
   turnViewDown: 'turn bottom face',

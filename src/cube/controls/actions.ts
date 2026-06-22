@@ -1,4 +1,4 @@
-import type { Direction, Face } from '../model'
+import type { Direction, Face, MoveLayers } from '../model'
 import { getViewFaces, type ViewOrientation } from '../view'
 
 export type TurnActionId =
@@ -25,6 +25,11 @@ export type PeekActionId =
   | 'stopPeekLeft'
   | 'clearPeek'
 
+export type WideModifierActionId =
+  | 'startWideTurnModifier'
+  | 'stopWideTurnModifier'
+  | 'clearWideTurnModifier'
+
 export type ActionId =
   | TurnActionId
   | ViewActionId
@@ -35,11 +40,15 @@ export type CubeAction =
   | {
       readonly id: TurnActionId
       readonly direction: Direction
+      readonly layers?: MoveLayers
       readonly startedAt?: number
       readonly animationDurationMs?: number
     }
   | {
       readonly id: ViewActionId | PeekActionId | UtilityActionId
+    }
+  | {
+      readonly id: WideModifierActionId
     }
 
 export interface KeyBinding {
@@ -70,8 +79,13 @@ export function getFaceForViewAction(
   return viewFaces[VIEW_ACTION_TO_FACE_KEY[actionId]]
 }
 
-export function formatMoveLabel(face: Face, direction: Direction): string {
-  return direction === 1 ? face : `${face}'`
+export function formatMoveLabel(
+  face: Face,
+  direction: Direction,
+  layers: MoveLayers = 1,
+): string {
+  const base = layers === 2 ? `${face}w` : face
+  return direction === 1 ? base : `${base}'`
 }
 
 export function shouldPreventDefault(action: CubeAction | null): boolean {

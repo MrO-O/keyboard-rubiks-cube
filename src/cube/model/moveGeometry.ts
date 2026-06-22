@@ -18,5 +18,8 @@ export function getMoveQuarterTurn(move: CubeMove): Direction {
 
 export function getCubieIsInMoveLayer(cubie: Cubie, move: CubeMove): boolean {
   const { axis, layer } = getMoveAxisAndLayer(move)
-  return cubie.position[axis] === layer
+  return (
+    cubie.position[axis] === layer ||
+    (move.layers === 2 && cubie.position[axis] === 0)
+  )
 }

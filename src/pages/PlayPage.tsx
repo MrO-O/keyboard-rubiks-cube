@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import {
+  displayBindingKey,
   formatMoveLabel,
   keyToAction,
   shouldPreventDefault,
@@ -22,7 +23,13 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      const action = keyToAction(event, 'keydown', settings.keymap)
+      const action = keyToAction(
+        event,
+        'keydown',
+        settings.keymap,
+        settings.wideTurnModifierKey,
+        state.wideTurnModifierActive,
+      )
       if (!action) return
 
       if (shouldPreventDefault(action)) event.preventDefault()
@@ -30,7 +37,13 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
     }
 
     function handleKeyUp(event: KeyboardEvent) {
-      const action = keyToAction(event, 'keyup', settings.keymap)
+      const action = keyToAction(
+        event,
+        'keyup',
+        settings.keymap,
+        settings.wideTurnModifierKey,
+        state.wideTurnModifierActive,
+      )
       if (!action) return
 
       if (shouldPreventDefault(action)) event.preventDefault()
@@ -39,6 +52,7 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
 
     function handleBlur() {
       dispatch({ id: 'clearPeek' })
+      dispatch({ id: 'clearWideTurnModifier' })
     }
 
     window.addEventListener('keydown', handleKeyDown)
@@ -49,7 +63,12 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
       window.removeEventListener('keyup', handleKeyUp)
       window.removeEventListener('blur', handleBlur)
     }
-  }, [dispatch, settings.keymap])
+  }, [
+    dispatch,
+    settings.keymap,
+    settings.wideTurnModifierKey,
+    state.wideTurnModifierActive,
+  ])
 
   return (
     <main className="play-page">
@@ -95,6 +114,7 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
                 ? formatMoveLabel(
                     state.activeTurnAnimation.move.face,
                     state.activeTurnAnimation.move.direction,
+                    state.activeTurnAnimation.move.layers,
                   )
                 : 'idle'}
             </strong>
@@ -106,6 +126,7 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
                 ? formatMoveLabel(
                     state.pendingTurn.face,
                     state.pendingTurn.direction,
+                    state.pendingTurn.layers,
                   )
                 : 'none'}
             </strong>
@@ -166,6 +187,10 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
             ))}
           </ul>
           <p>Shift + U/I/H/J/K/L turns that face counterclockwise.</p>
+          <p>
+            Hold {displayBindingKey(settings.wideTurnModifierKey)} +
+            U/I/H/J/K/L for a two-layer wide turn; add Shift for its inverse.
+          </p>
         </section>
 
         <section className="move-history" aria-label="Recent moves">

@@ -19,6 +19,8 @@ describe('SettingsPage', () => {
     expect(markup).toContain('Normal')
     expect(markup).toContain('Slow')
     expect(markup).toContain('Restore defaults')
+    expect(markup).toContain('Wide turn modifier')
+    expect(markup).toContain('>;<')
     expect(markup).toContain('Game data')
     expect(markup).toContain(
       'This app stores game state and settings locally in this browser',

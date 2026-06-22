@@ -60,6 +60,13 @@ describe('game storage', () => {
       JSON.stringify({ ...validGame(), viewOrientation: undefined }),
     ],
     ['invalid moveHistory', JSON.stringify({ ...validGame(), moveHistory: {} })],
+    [
+      'unsupported move layers',
+      JSON.stringify({
+        ...validGame(),
+        moveHistory: [{ face: 'F', direction: 1, layers: 3 }],
+      }),
+    ],
   ])('rejects %s', (_case, stored) => {
     const storage = new MemoryStorage()
     storage.setItem(GAME_STORAGE_KEY, stored)
@@ -72,6 +79,16 @@ describe('game storage', () => {
     expect(JSON.parse(storage.values.get(GAME_STORAGE_KEY)!)).toEqual(
       JSON.parse(JSON.stringify(validGame())),
     )
+  })
+
+  it('round-trips a wide move', () => {
+    const storage = new MemoryStorage()
+    const game = {
+      ...validGame(),
+      moveHistory: [{ face: 'F', direction: -1, layers: 2 }] as const,
+    }
+    saveGameState(game, storage)
+    expect(loadGameState(storage)?.moveHistory).toEqual(game.moveHistory)
   })
 
   it('deletes a saved game', () => {

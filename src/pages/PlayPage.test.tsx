@@ -16,7 +16,8 @@ const gameMock = {
     peekDirection: null,
     activeTurnAnimation: null,
     pendingTurn: null as CubeMove | null,
-    moveHistory: [],
+    wideTurnModifierActive: false,
+    moveHistory: [] as { move: CubeMove; label: string }[],
     lastActionLabel: 'Ready',
     isSolved: true,
   },
@@ -65,6 +66,7 @@ describe('PlayPage', () => {
     expect(markup).toContain('Solved:')
     expect(markup).toContain('K: turn front face')
     expect(markup).toContain('Shift + U/I/H/J/K/L')
+    expect(markup).toContain('Hold ; + U/I/H/J/K/L')
     expect(markup).toContain('W: rotate view up')
     expect(markup).toContain('Space: roll current front clockwise')
     expect(markup).toContain('View orientation')
@@ -83,13 +85,24 @@ describe('PlayPage', () => {
   })
 
   it('renders the buffered physical move', () => {
-    gameMock.state.pendingTurn = { face: 'R', direction: -1 }
+    gameMock.state.pendingTurn = { face: 'R', direction: -1, layers: 2 }
 
     const markup = renderPlay()
 
     expect(markup).toContain('Buffered:')
-    expect(markup).toContain('R&#x27;')
+    expect(markup).toContain('Rw&#x27;')
     gameMock.state.pendingTurn = null
+  })
+
+  it('renders wide notation in move history', () => {
+    gameMock.state.moveHistory = [
+      { move: { face: 'U', direction: 1, layers: 2 }, label: 'Uw' },
+      { move: { face: 'F', direction: -1, layers: 2 }, label: "Fw'" },
+    ]
+    const markup = renderPlay()
+    expect(markup).toContain('Uw')
+    expect(markup).toContain('Fw&#x27;')
+    gameMock.state.moveHistory = []
   })
 
   it('renders the current custom keymap', () => {
@@ -102,5 +115,15 @@ describe('PlayPage', () => {
 
     expect(markup).toContain('P: turn front face')
     expect(markup).not.toContain('K: turn front face')
+  })
+
+  it('renders the custom wide modifier', () => {
+    const settings: AppSettings = {
+      ...createDefaultSettings(),
+      wideTurnModifierKey: 'G',
+    }
+    const markup = renderPlay(settings)
+    expect(markup).toContain('Hold G + U/I/H/J/K/L')
+    expect(markup).not.toContain('Hold ; + U/I/H/J/K/L')
   })
 })

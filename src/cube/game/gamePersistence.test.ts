@@ -67,6 +67,27 @@ describe('game persistence integration', () => {
     expect(restored.moveHistory).toEqual([])
   })
 
+  it('restores wide move history and notation', () => {
+    const active = gameReducer(createInitialCubeGameState(), {
+      id: 'turnViewFront',
+      direction: -1,
+      layers: 2,
+      startedAt: 100,
+    })
+    const moved = gameReducer(active, {
+      id: 'completeFaceTurnAnimation',
+      startedAt: 100,
+      completedAt: 280,
+      nextAnimationDurationMs: 180,
+    })
+    const restored = restoreGameState(createPersistedGameState(moved))
+    expect(restored.moveHistory[0]).toEqual({
+      move: { face: 'F', direction: -1, layers: 2 },
+      label: "Fw'",
+    })
+    expect(restored.wideTurnModifierActive).toBe(false)
+  })
+
   it('falls back without crashing when the stored game is corrupt', () => {
     const storage = new MemoryStorage()
     storage.setItem(GAME_STORAGE_KEY, '{broken')
@@ -100,9 +121,10 @@ describe('game persistence integration', () => {
     }
   })
 
-  it('does not autosave peek, an active animation, or pendingTurn', () => {
+  it('does not autosave peek, wide modifier, an active animation, or pendingTurn', () => {
     const initial = createInitialCubeGameState()
     const peeking = gameReducer(initial, { id: 'startPeekRight' })
+    const wideModifier = gameReducer(initial, { id: 'startWideTurnModifier' })
     const active = gameReducer(initial, {
       id: 'turnViewFront',
       direction: 1,
@@ -115,6 +137,7 @@ describe('game persistence integration', () => {
     })
 
     expect(shouldAutosaveGameState(initial, peeking)).toBe(false)
+    expect(shouldAutosaveGameState(initial, wideModifier)).toBe(false)
     expect(shouldAutosaveGameState(initial, active)).toBe(false)
     expect(shouldAutosaveGameState(active, pending)).toBe(false)
 

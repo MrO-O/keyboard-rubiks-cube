@@ -32,7 +32,8 @@ function isCubeMove(value: unknown): value is CubeMove {
   return (
     isRecord(value) &&
     isFace(value.face) &&
-    (value.direction === 1 || value.direction === -1)
+    (value.direction === 1 || value.direction === -1) &&
+    (value.layers === undefined || value.layers === 1 || value.layers === 2)
   )
 }
 

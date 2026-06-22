@@ -1,5 +1,6 @@
 import {
   DEFAULT_KEYMAP,
+  DEFAULT_WIDE_TURN_MODIFIER_KEY,
   formatKeyBindingLabel,
   normalizeBindingKey,
   type KeyBinding,
@@ -28,6 +29,10 @@ export type RebindResult =
   | { readonly ok: true; readonly keymap: readonly KeyBinding[] }
   | { readonly ok: false; readonly error: string }
 
+export type WideModifierRebindResult =
+  | { readonly ok: true; readonly key: string }
+  | { readonly ok: false; readonly error: string }
+
 export function validateBindingEvent(
   event: BindingKeyboardEvent,
 ): BindingValidationResult {
@@ -49,9 +54,16 @@ export function rebindAction(
   keymap: readonly KeyBinding[],
   actionId: BindableActionId,
   inputKey: string,
+  wideTurnModifierKey = DEFAULT_WIDE_TURN_MODIFIER_KEY,
 ): RebindResult {
   const validation = validateBindingEvent({ key: inputKey })
   if (!validation.ok) return validation
+  if (validation.key === normalizeBindingKey(wideTurnModifierKey)) {
+    return {
+      ok: false,
+      error: `${displayKey(validation.key)} is already assigned as the wide turn modifier.`,
+    }
+  }
 
   const conflict = keymap.find(
     (binding) =>
@@ -72,6 +84,21 @@ export function rebindAction(
       return { ...updated, label: formatKeyBindingLabel(updated) }
     }),
   }
+}
+
+export function rebindWideTurnModifier(
+  keymap: readonly KeyBinding[],
+  inputKey: string,
+): WideModifierRebindResult {
+  const validation = validateBindingEvent({ key: inputKey })
+  if (!validation.ok) return validation
+  if (keymap.some((binding) => binding.key === validation.key)) {
+    return {
+      ok: false,
+      error: `${displayKey(validation.key)} is already assigned.`,
+    }
+  }
+  return { ok: true, key: validation.key }
 }
 
 export function validateSettings(value: unknown): AppSettings | null {
@@ -108,11 +135,24 @@ export function validateSettings(value: unknown): AppSettings | null {
     normalized.push({ ...binding, label: formatKeyBindingLabel(binding) })
   }
 
+  const wideKeyResult = validateBindingEvent({
+    key:
+      typeof value.wideTurnModifierKey === 'string'
+        ? value.wideTurnModifierKey
+        : DEFAULT_WIDE_TURN_MODIFIER_KEY,
+  })
+  if (!wideKeyResult.ok || usedKeys.has(wideKeyResult.key)) return null
+
   return {
     keymap: normalized,
     animationDurationMs:
       value.animationDurationMs as AppSettings['animationDurationMs'],
+    wideTurnModifierKey: wideKeyResult.key,
   }
+}
+
+function displayKey(key: string): string {
+  return key === ' ' ? 'Space' : key
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

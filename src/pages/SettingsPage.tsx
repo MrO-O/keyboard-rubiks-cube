@@ -4,6 +4,7 @@ import {
   ALLOWED_ANIMATION_DURATIONS,
   displayBindingKey,
   rebindAction,
+  rebindWideTurnModifier,
   useSettings,
   validateBindingEvent,
   type AnimationDurationMs,
@@ -26,9 +27,9 @@ export function SettingsPage({
   onClearSavedGame,
 }: SettingsPageProps) {
   const { settings, updateSettings, restoreDefaults } = useSettings()
-  const [editingAction, setEditingAction] = useState<BindableActionId | null>(
-    null,
-  )
+  const [editingAction, setEditingAction] = useState<
+    BindableActionId | 'wideTurnModifier' | null
+  >(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -48,10 +49,26 @@ export function SettingsPage({
         return
       }
 
+      if (editingAction === 'wideTurnModifier') {
+        const result = rebindWideTurnModifier(
+          settings.keymap,
+          validation.key,
+        )
+        if (!result.ok) {
+          setError(result.error)
+          return
+        }
+        updateSettings({ ...settings, wideTurnModifierKey: result.key })
+        setEditingAction(null)
+        setError(null)
+        return
+      }
+
       const result = rebindAction(
         settings.keymap,
         editingAction!,
         validation.key,
+        settings.wideTurnModifierKey,
       )
       if (!result.ok) {
         setError(result.error)
@@ -90,6 +107,32 @@ export function SettingsPage({
       <section className="settings-section" aria-labelledby="keybindings-title">
         <h2 id="keybindings-title">Key bindings</h2>
         <div className="binding-list">
+          <div className="binding-row">
+            <span>Wide turn modifier</span>
+            <kbd>{displayBindingKey(settings.wideTurnModifierKey)}</kbd>
+            {editingAction === 'wideTurnModifier' ? (
+              <div className="binding-actions">
+                <span className="capture-status">Press a key</span>
+                <button
+                  onClick={() => {
+                    setEditingAction(null)
+                    setError(null)
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setEditingAction('wideTurnModifier')
+                  setError(null)
+                }}
+              >
+                Change
+              </button>
+            )}
+          </div>
           {settings.keymap.map((binding) => {
             const actionId = binding.actionId as BindableActionId
             const isEditing = editingAction === actionId

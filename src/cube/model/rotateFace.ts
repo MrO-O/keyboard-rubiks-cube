@@ -10,6 +10,7 @@ import type {
   CubeState,
   Direction,
   Face,
+  MoveLayers,
   Stickers,
   Vec3,
 } from './types'
@@ -59,8 +60,9 @@ export function rotateFace(
   state: CubeState,
   face: Face,
   direction: Direction,
+  layers: MoveLayers = 1,
 ): CubeState {
-  const move = { face, direction }
+  const move = { face, direction, layers }
   const { axis } = getMoveAxisAndLayer(move)
   const quarterTurn = getMoveQuarterTurn(move)
 

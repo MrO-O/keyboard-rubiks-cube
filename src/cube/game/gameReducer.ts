@@ -30,6 +30,7 @@ export function createInitialCubeGameState(): CubeGameState {
     peekDirection: null,
     activeTurnAnimation: null,
     pendingTurn: null,
+    wideTurnModifierActive: false,
     moveHistory: [],
     lastActionLabel: 'Ready',
     isSolved: true,
@@ -45,6 +46,9 @@ function isBlockedDuringAnimation(actionId: CubeGameAction['id']): boolean {
     'stopPeekRight',
     'stopPeekLeft',
     'clearPeek',
+    'startWideTurnModifier',
+    'stopWideTurnModifier',
+    'clearWideTurnModifier',
   ].includes(actionId)
 }
 
@@ -56,6 +60,7 @@ export function gameReducer(
     return bufferUserTurn(state, {
       face: getFaceForViewAction(state.viewOrientation, action.id),
       direction: action.direction,
+      ...(action.layers ? { layers: action.layers } : {}),
     })
   }
 
@@ -75,6 +80,7 @@ export function gameReducer(
         {
           face: getFaceForViewAction(state.viewOrientation, action.id),
           direction: action.direction,
+          ...(action.layers ? { layers: action.layers } : {}),
         },
         action.startedAt ?? 0,
         action.animationDurationMs ?? TURN_ANIMATION_MS,
@@ -142,6 +148,13 @@ export function gameReducer(
     case 'clearPeek':
       return clearPeek(state)
 
+    case 'startWideTurnModifier':
+      return updateWideTurnModifier(state, true)
+
+    case 'stopWideTurnModifier':
+    case 'clearWideTurnModifier':
+      return updateWideTurnModifier(state, false)
+
     case 'undoMove':
       return undoLastMove(state)
 
@@ -150,6 +163,18 @@ export function gameReducer(
 
     case 'scrambleCube':
       return scrambleCube(state.viewOrientation)
+  }
+}
+
+function updateWideTurnModifier(
+  state: CubeGameState,
+  active: boolean,
+): CubeGameState {
+  if (state.wideTurnModifierActive === active) return state
+  return {
+    ...state,
+    wideTurnModifierActive: active,
+    lastActionLabel: active ? 'Wide modifier active' : 'Wide modifier released',
   }
 }
 
@@ -181,7 +206,7 @@ function startUserTurn(
   durationMs: number,
 ): CubeGameState {
   const toState = applyMove(state.cubeState, move)
-  const label = formatMoveLabel(move.face, move.direction)
+  const label = formatMoveLabel(move.face, move.direction, move.layers)
   return {
     ...state,
     activeTurnAnimation: {
@@ -200,7 +225,7 @@ function bufferUserTurn(state: CubeGameState, move: CubeMove): CubeGameState {
   return {
     ...state,
     pendingTurn: move,
-    lastActionLabel: `Buffered ${formatMoveLabel(move.face, move.direction)}`,
+    lastActionLabel: `Buffered ${formatMoveLabel(move.face, move.direction, move.layers)}`,
   }
 }
 
@@ -213,7 +238,11 @@ function completeUserTurn(
   const animation = state.activeTurnAnimation
   if (!animation || animation.startedAt !== startedAt) return state
 
-  const label = formatMoveLabel(animation.move.face, animation.move.direction)
+  const label = formatMoveLabel(
+    animation.move.face,
+    animation.move.direction,
+    animation.move.layers,
+  )
   const committedState: CubeGameState = {
     ...state,
     cubeState: animation.toState,
@@ -257,6 +286,7 @@ function resetCube(): CubeGameState {
     peekDirection: null,
     activeTurnAnimation: null,
     pendingTurn: null,
+    wideTurnModifierActive: false,
     moveHistory: [],
     lastActionLabel: 'Reset',
     isSolved: true,
@@ -271,6 +301,7 @@ function scrambleCube(viewOrientation: ViewOrientation): CubeGameState {
     peekDirection: null,
     activeTurnAnimation: null,
     pendingTurn: null,
+    wideTurnModifierActive: false,
     moveHistory: [],
     lastActionLabel: 'Scramble',
     isSolved: isSolved(cubeState),

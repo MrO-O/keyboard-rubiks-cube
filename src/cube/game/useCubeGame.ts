@@ -20,11 +20,12 @@ export function restoreGameState(
     viewOrientation: persisted.viewOrientation,
     moveHistory: persisted.moveHistory.map((move) => ({
       move,
-      label: formatMoveLabel(move.face, move.direction),
+      label: formatMoveLabel(move.face, move.direction, move.layers),
     })),
     peekDirection: null,
     activeTurnAnimation: null,
     pendingTurn: null,
+    wideTurnModifierActive: false,
     lastActionLabel: 'Restored saved game',
     isSolved: isSolved(persisted.cubeState),
   }

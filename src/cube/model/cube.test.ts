@@ -7,6 +7,7 @@ import {
   createSolvedCube,
   inverseMove,
   isSolved,
+  getCubieIsInMoveLayer,
   scramble,
   serializeCube,
 } from './index'
@@ -66,6 +67,64 @@ describe('cube model', () => {
     const moved = applyMove(solved, { face: 'F', direction: 1 })
     expect(serializeCube(solved)).toBe(before)
     expect(moved).not.toBe(solved)
+  })
+
+  it('treats omitted layers as a single-layer move', () => {
+    const solved = createSolvedCube()
+    expect(
+      serializeCube(applyMove(solved, { face: 'U', direction: 1 })),
+    ).toBe(
+      serializeCube(
+        applyMove(solved, { face: 'U', direction: 1, layers: 1 }),
+      ),
+    )
+  })
+
+  it.each([
+    ['U', 'y', 1],
+    ['F', 'z', 1],
+    ['R', 'x', 1],
+  ] as const)('%s wide selects its outer and middle layers', (face, axis, outer) => {
+    const move: CubeMove = { face, direction: 1, layers: 2 }
+    for (const cubie of createSolvedCube().cubies) {
+      expect(getCubieIsInMoveLayer(cubie, move)).toBe(
+        cubie.position[axis] === outer || cubie.position[axis] === 0,
+      )
+    }
+  })
+
+  it.each(FACES)('%s wide selects 17 visible cubies', (face) => {
+    const move: CubeMove = { face, direction: 1, layers: 2 }
+    expect(
+      createSolvedCube().cubies.filter((cubie) =>
+        getCubieIsInMoveLayer(cubie, move),
+      ),
+    ).toHaveLength(17)
+  })
+
+  it.each(FACES)('%s wide four times is identity', (face) => {
+    const solved = createSolvedCube()
+    const move: CubeMove = { face, direction: 1, layers: 2 }
+    expect(serializeCube(applyMoves(solved, [move, move, move, move]))).toBe(
+      serializeCube(solved),
+    )
+  })
+
+  it.each(FACES)('%s wide followed by its inverse is identity', (face) => {
+    const solved = createSolvedCube()
+    const move: CubeMove = { face, direction: 1, layers: 2 }
+    expect(serializeCube(applyMoves(solved, [move, inverseMove(move)]))).toBe(
+      serializeCube(solved),
+    )
+  })
+
+  it('applies a wide move immutably and produces an unsolved state', () => {
+    const solved = createSolvedCube()
+    const before = serializeCube(solved)
+    const moved = applyMove(solved, { face: 'F', direction: 1, layers: 2 })
+    expect(serializeCube(solved)).toBe(before)
+    expect(moved).not.toBe(solved)
+    expect(isSolved(moved)).toBe(false)
   })
 
   it('serializes equivalent states identically', () => {

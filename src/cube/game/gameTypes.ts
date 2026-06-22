@@ -32,6 +32,7 @@ export interface CubeGameState {
   readonly peekDirection: PeekDirection
   readonly activeTurnAnimation: ActiveTurnAnimation | null
   readonly pendingTurn: CubeMove | null
+  readonly wideTurnModifierActive: boolean
   readonly moveHistory: readonly MoveHistoryEntry[]
   readonly lastActionLabel: string
   readonly isSolved: boolean

@@ -91,6 +91,29 @@ describe('turn animation geometry', () => {
     expect(groups.stationary).toHaveLength(17)
   })
 
+  it('splits a wide turn into 17 moving and nine fixed cubies', () => {
+    const groups = getTurnRenderGroups(createSolvedCube(), {
+      face: 'F',
+      direction: 1,
+      layers: 2,
+    })
+
+    expect(groups.rotating).toHaveLength(17)
+    expect(groups.stationary).toHaveLength(9)
+  })
+
+  it.each(['F', 'B', 'U', 'D', 'L', 'R'] as Face[])(
+    '%s wide uses the same quarter-turn angle as its outer face',
+    (face) => {
+      const single: CubeMove = { face, direction: 1, layers: 1 }
+      const wide: CubeMove = { face, direction: 1, layers: 2 }
+      expect(getTurnAngleRadians(wide, 1)).toBe(
+        getTurnAngleRadians(single, 1),
+      )
+      expect(Math.abs(getTurnAngleRadians(wide, 1))).toBeCloseTo(Math.PI / 2)
+    },
+  )
+
   it('changes the rotating group angle as progress advances', () => {
     const move: CubeMove = { face: 'R', direction: 1 }
 
