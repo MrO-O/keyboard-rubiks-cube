@@ -222,4 +222,23 @@ describe('custom controls integration', () => {
       id: 'stopPeekRight',
     })
   })
+
+  it('uses Shift with a custom roll key for counterclockwise roll', () => {
+    const result = rebindAction(
+      createDefaultSettings().keymap,
+      'rollViewClockwise',
+      'O',
+    )
+    if (!result.ok) throw new Error(result.error)
+
+    expect(keyToAction({ key: 'O' }, 'keydown', result.keymap)).toEqual({
+      id: 'rollViewClockwise',
+    })
+    expect(
+      keyToAction({ key: 'O', shiftKey: true }, 'keydown', result.keymap),
+    ).toEqual({ id: 'rollViewCounterClockwise' })
+    expect(
+      keyToAction({ key: 'O', ctrlKey: true }, 'keydown', result.keymap),
+    ).toBeNull()
+  })
 })

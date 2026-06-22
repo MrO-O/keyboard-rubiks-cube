@@ -2,6 +2,8 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import { createSolvedCube, type CubeMove } from '../cube/model'
 import { INITIAL_VIEW } from '../cube/view'
+import { rotateViewLeft } from '../cube/view'
+import type { CubeGameState } from '../cube/game'
 import {
   SettingsProvider,
   createDefaultSettings,
@@ -15,6 +17,7 @@ const gameMock = {
     viewOrientation: INITIAL_VIEW,
     peekDirection: null,
     activeTurnAnimation: null,
+    activeViewAnimation: null,
     pendingTurn: null as CubeMove | null,
     wideTurnModifierActive: false,
     moveHistory: [] as { move: CubeMove; label: string }[],
@@ -29,6 +32,7 @@ vi.mock('../cube/render', () => ({
     viewOrientation: { up: string; front: string }
     peekDirection: string | null
     activeTurnAnimation: null
+    activeViewAnimation: null
   }) => (
     <div>
       Mock cube scene: {props.cubeState.cubies.length} cubies,{' '}
@@ -40,14 +44,18 @@ vi.mock('../cube/render', () => ({
 
 import { PlayPage } from './PlayPage'
 
-function renderPlay(settings = createDefaultSettings()) {
+function renderPlay(
+  settings = createDefaultSettings(),
+  state: CubeGameState = gameMock.state,
+) {
   return renderToStaticMarkup(
     <SettingsProvider initialSettings={settings}>
       <PlayPage
         game={{
-          state: gameMock.state,
+          state,
           dispatch: vi.fn(),
           completeTurnAnimation: vi.fn(),
+          completeViewAnimation: vi.fn(),
           clearSavedGame: vi.fn(),
         }}
         onOpenSettings={vi.fn()}
@@ -80,6 +88,8 @@ describe('PlayPage', () => {
     expect(markup).toContain('Turning:')
     expect(markup).toContain('idle')
     expect(markup).toContain('Buffered:')
+    expect(markup).toContain('View animation:')
+    expect(markup).toContain('Shift + Space rolls the current front')
     expect(markup).toContain('none')
     expect(markup).toContain('Settings')
   })
@@ -125,5 +135,31 @@ describe('PlayPage', () => {
     const markup = renderPlay(settings)
     expect(markup).toContain('Hold G + U/I/H/J/K/L')
     expect(markup).not.toContain('Hold ; + U/I/H/J/K/L')
+  })
+
+  it('renders the active view animation action', () => {
+    const state: CubeGameState = {
+      ...gameMock.state,
+      activeViewAnimation: {
+        action: 'rollViewCounterClockwise',
+        fromOrientation: INITIAL_VIEW,
+        toOrientation: rotateViewLeft(INITIAL_VIEW),
+        startedAt: 100,
+        durationMs: 180,
+      },
+    }
+    expect(renderPlay(createDefaultSettings(), state)).toContain(
+      'Roll counterclockwise',
+    )
+  })
+
+  it('renders Shift help for a custom roll key', () => {
+    const defaults = createDefaultSettings()
+    const result = rebindAction(defaults.keymap, 'rollViewClockwise', 'O')
+    if (!result.ok) throw new Error(result.error)
+    const settings: AppSettings = { ...defaults, keymap: result.keymap }
+    const markup = renderPlay(settings)
+    expect(markup).toContain('Shift + O rolls the current front')
+    expect(markup).not.toContain('Shift + Space rolls the current front')
   })
 })

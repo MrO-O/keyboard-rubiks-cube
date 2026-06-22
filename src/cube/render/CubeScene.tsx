@@ -1,7 +1,7 @@
 import { PerspectiveCamera } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useRef, useState } from 'react'
-import type { ActiveTurnAnimation } from '../game'
+import type { ActiveTurnAnimation, ActiveViewAnimation } from '../game'
 import type { CubeState } from '../model'
 import type { PeekDirection, ViewOrientation } from '../view'
 import { CubeRenderer } from './CubeRenderer'
@@ -13,7 +13,9 @@ interface CubeSceneProps {
   readonly viewOrientation: ViewOrientation
   readonly peekDirection: PeekDirection
   readonly activeTurnAnimation: ActiveTurnAnimation | null
+  readonly activeViewAnimation: ActiveViewAnimation | null
   readonly onTurnAnimationComplete: (startedAt: number) => void
+  readonly onViewAnimationComplete: (startedAt: number) => void
 }
 
 export function CubeScene({
@@ -21,7 +23,9 @@ export function CubeScene({
   viewOrientation,
   peekDirection,
   activeTurnAnimation,
+  activeViewAnimation,
   onTurnAnimationComplete,
+  onViewAnimationComplete,
 }: CubeSceneProps) {
   const camera = getDefaultCameraConfig()
 
@@ -41,44 +45,60 @@ export function CubeScene({
       <ambientLight intensity={0.7} />
       <directionalLight position={[4, 5, 6]} intensity={1.4} />
       <directionalLight position={[-3, 2, -4]} intensity={0.35} />
-      <TurnAnimationDriver
-        key={activeTurnAnimation?.startedAt ?? 'idle'}
+      <AnimationDriver
+        key={
+          activeTurnAnimation
+            ? `turn-${activeTurnAnimation.startedAt}`
+            : activeViewAnimation
+              ? `view-${activeViewAnimation.startedAt}`
+              : 'idle'
+        }
         cubeState={cubeState}
         viewOrientation={viewOrientation}
         peekDirection={peekDirection}
         activeTurnAnimation={activeTurnAnimation}
-        onComplete={onTurnAnimationComplete}
+        activeViewAnimation={activeViewAnimation}
+        onTurnComplete={onTurnAnimationComplete}
+        onViewComplete={onViewAnimationComplete}
       />
     </Canvas>
   )
 }
 
-interface TurnAnimationDriverProps {
+interface AnimationDriverProps {
   readonly cubeState: CubeState
   readonly viewOrientation: ViewOrientation
   readonly peekDirection: PeekDirection
   readonly activeTurnAnimation: ActiveTurnAnimation | null
-  readonly onComplete: (startedAt: number) => void
+  readonly activeViewAnimation: ActiveViewAnimation | null
+  readonly onTurnComplete: (startedAt: number) => void
+  readonly onViewComplete: (startedAt: number) => void
 }
 
-function TurnAnimationDriver({
+function AnimationDriver({
   cubeState,
   viewOrientation,
   peekDirection,
   activeTurnAnimation,
-  onComplete,
-}: TurnAnimationDriverProps) {
+  activeViewAnimation,
+  onTurnComplete,
+  onViewComplete,
+}: AnimationDriverProps) {
   const [progress, setProgress] = useState(0)
   const completed = useRef(false)
 
   useFrame(() => {
-    if (!activeTurnAnimation || completed.current) return
-    const elapsed = performance.now() - activeTurnAnimation.startedAt
-    const nextProgress = clampProgress(elapsed / activeTurnAnimation.durationMs)
+    const animation = activeTurnAnimation ?? activeViewAnimation
+    if (!animation || completed.current) return
+    const elapsed = performance.now() - animation.startedAt
+    const nextProgress = clampProgress(elapsed / animation.durationMs)
     setProgress(nextProgress)
     if (nextProgress === 1) {
       completed.current = true
-      onComplete(activeTurnAnimation.startedAt)
+      if (activeTurnAnimation) onTurnComplete(activeTurnAnimation.startedAt)
+      else if (activeViewAnimation) {
+        onViewComplete(activeViewAnimation.startedAt)
+      }
     }
   })
 
@@ -88,6 +108,7 @@ function TurnAnimationDriver({
       viewOrientation={viewOrientation}
       peekDirection={peekDirection}
       activeTurnAnimation={activeTurnAnimation}
+      activeViewAnimation={activeViewAnimation}
       animationProgress={progress}
     />
   )

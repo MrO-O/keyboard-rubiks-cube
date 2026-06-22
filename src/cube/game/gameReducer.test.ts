@@ -27,7 +27,99 @@ function completeTurn(
   })
 }
 
+function completeViewAnimation(
+  state: CubeGameState,
+  completedAt?: number,
+): CubeGameState {
+  const startedAt = state.activeViewAnimation?.startedAt
+  if (startedAt === undefined) throw new Error('Expected an active view animation')
+  return gameReducer(state, {
+    id: 'completeViewAnimation',
+    startedAt,
+    completedAt: completedAt ?? startedAt + 180,
+  })
+}
+
 describe('cube game reducer', () => {
+  it.each([
+    'rotateViewUp',
+    'rotateViewDown',
+    'rotateViewLeft',
+    'rotateViewRight',
+    'rollViewClockwise',
+    'rollViewCounterClockwise',
+  ] as const)('%s starts a view animation without committing state', (id) => {
+    const initial = createInitialCubeGameState()
+    const active = gameReducer(initial, {
+      id,
+      startedAt: 100,
+      animationDurationMs: 260,
+    })
+
+    expect(active.activeViewAnimation).toMatchObject({
+      action: id,
+      fromOrientation: initial.viewOrientation,
+      startedAt: 100,
+      durationMs: 260,
+    })
+    expect(active.activeViewAnimation?.toOrientation).not.toEqual(
+      initial.viewOrientation,
+    )
+    expect(active.viewOrientation).toBe(initial.viewOrientation)
+    expect(active.cubeState).toBe(initial.cubeState)
+    expect(active.moveHistory).toBe(initial.moveHistory)
+  })
+
+  it('commits view orientation only when its animation completes', () => {
+    const initial = createInitialCubeGameState()
+    const active = gameReducer(initial, {
+      id: 'rotateViewLeft',
+      startedAt: 100,
+      animationDurationMs: 180,
+    })
+    const completed = completeViewAnimation(active)
+
+    expect(completed.viewOrientation).toEqual(
+      active.activeViewAnimation?.toOrientation,
+    )
+    expect(completed.activeViewAnimation).toBeNull()
+    expect(completed.cubeState).toBe(initial.cubeState)
+    expect(completed.moveHistory).toBe(initial.moveHistory)
+  })
+
+  it('ignores turn, view, scramble, and undo during view animation', () => {
+    const active = gameReducer(createInitialCubeGameState(), {
+      id: 'rotateViewLeft',
+      startedAt: 100,
+    })
+    expect(
+      gameReducer(active, {
+        id: 'turnViewFront',
+        direction: 1,
+        startedAt: 101,
+      }),
+    ).toBe(active)
+    expect(gameReducer(active, { id: 'rotateViewRight' })).toBe(active)
+    expect(gameReducer(active, { id: 'scrambleCube' })).toBe(active)
+    expect(gameReducer(active, { id: 'undoMove' })).toBe(active)
+    expect(active.pendingTurn).toBeNull()
+  })
+
+  it('keeps peek responsive and reset cancels view animation', () => {
+    const active = gameReducer(createInitialCubeGameState(), {
+      id: 'rotateViewLeft',
+      startedAt: 100,
+    })
+    const peeking = gameReducer(active, { id: 'startPeekRight' })
+    const released = gameReducer(peeking, { id: 'stopPeekRight' })
+    const reset = gameReducer(peeking, { id: 'resetCube' })
+
+    expect(peeking.peekDirection).toBe('showRight')
+    expect(released.peekDirection).toBeNull()
+    expect(released.activeViewAnimation).toBe(active.activeViewAnimation)
+    expect(reset.activeViewAnimation).toBeNull()
+    expect(reset.viewOrientation).toEqual(INITIAL_VIEW)
+  })
   it('tracks wide modifier state without changing cube or history', () => {
     const initial = createInitialCubeGameState()
     const active = gameReducer(initial, { id: 'startWideTurnModifier' })
@@ -152,7 +244,7 @@ describe('cube game reducer', () => {
   ] as const)('%s only changes view orientation', (id) => {
     const initial = createInitialCubeGameState()
     const serialized = serializeCube(initial.cubeState)
-    const next = gameReducer(initial, { id })
+    const next = completeViewAnimation(gameReducer(initial, { id }))
 
     expect(next.viewOrientation).not.toEqual(initial.viewOrientation)
     expect(serializeCube(next.cubeState)).toBe(serialized)
@@ -161,7 +253,9 @@ describe('cube game reducer', () => {
 
   it('rolls the side faces while keeping front fixed', () => {
     const initial = createInitialCubeGameState()
-    const rolled = gameReducer(initial, { id: 'rollViewClockwise' })
+    const rolled = completeViewAnimation(
+      gameReducer(initial, { id: 'rollViewClockwise' }),
+    )
 
     expect(rolled.viewOrientation.front).toBe(initial.viewOrientation.front)
     expect(rolled.viewOrientation.up).not.toBe(initial.viewOrientation.up)
@@ -173,7 +267,7 @@ describe('cube game reducer', () => {
     const repeat = (id: 'rollViewClockwise' | 'rotateViewLeft') => {
       let state = createInitialCubeGameState()
       for (let index = 0; index < 4; index += 1) {
-        state = gameReducer(state, { id })
+        state = completeViewAnimation(gameReducer(state, { id }))
       }
       return state
     }
@@ -184,7 +278,9 @@ describe('cube game reducer', () => {
 
   it('turns the new physical front after rotating the view', () => {
     const initial = createInitialCubeGameState()
-    const rotated = gameReducer(initial, { id: 'rotateViewLeft' })
+    const rotated = completeViewAnimation(
+      gameReducer(initial, { id: 'rotateViewLeft' }),
+    )
     const physicalFront = getViewFaces(rotated.viewOrientation).front
     const moved = gameReducer(rotated, {
       id: 'turnViewFront',
@@ -197,7 +293,9 @@ describe('cube game reducer', () => {
 
   it('undoes the last face turn without reverting view orientation', () => {
     const moved = completeTurn(startFrontTurn())
-    const rotated = gameReducer(moved, { id: 'rotateViewLeft' })
+    const rotated = completeViewAnimation(
+      gameReducer(moved, { id: 'rotateViewLeft' }),
+    )
     const undone = gameReducer(rotated, { id: 'undoMove' })
 
     expect(undone.viewOrientation).toEqual(rotated.viewOrientation)
@@ -207,9 +305,11 @@ describe('cube game reducer', () => {
   })
 
   it('keeps the current view when scrambling', () => {
-    const rotated = gameReducer(createInitialCubeGameState(), {
-      id: 'rotateViewRight',
-    })
+    const rotated = completeViewAnimation(
+      gameReducer(createInitialCubeGameState(), {
+        id: 'rotateViewRight',
+      }),
+    )
     const scrambled = gameReducer(rotated, { id: 'scrambleCube' })
 
     expect(scrambled.viewOrientation).toEqual(rotated.viewOrientation)
@@ -248,9 +348,11 @@ describe('cube game reducer', () => {
   it.each(['showRight', 'showLeft'] as const)(
     'still turns the current physical front while peeking %s',
     (peekDirection) => {
-      const rotated = gameReducer(createInitialCubeGameState(), {
-        id: 'rotateViewLeft',
-      })
+      const rotated = completeViewAnimation(
+        gameReducer(createInitialCubeGameState(), {
+          id: 'rotateViewLeft',
+        }),
+      )
       const peeking = gameReducer(rotated, {
         id: peekDirection === 'showRight' ? 'startPeekRight' : 'startPeekLeft',
       })
@@ -318,9 +420,11 @@ describe('cube game reducer', () => {
   })
 
   it('resolves a buffered turn against viewOrientation at keydown time', () => {
-    const rotated = gameReducer(createInitialCubeGameState(), {
-      id: 'rotateViewLeft',
-    })
+    const rotated = completeViewAnimation(
+      gameReducer(createInitialCubeGameState(), {
+        id: 'rotateViewLeft',
+      }),
+    )
     const active = gameReducer(rotated, {
       id: 'turnViewUp',
       direction: 1,

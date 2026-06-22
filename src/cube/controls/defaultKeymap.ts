@@ -14,6 +14,7 @@ const ACTION_DESCRIPTIONS: Readonly<Record<KeyBinding['actionId'], string>> = {
   rotateViewLeft: 'rotate view left',
   rotateViewRight: 'rotate view right',
   rollViewClockwise: 'roll current front clockwise',
+  rollViewCounterClockwise: 'roll current front counterclockwise',
   startPeekRight: 'peek right side',
   startPeekLeft: 'peek left side',
   stopPeekRight: 'stop right peek',

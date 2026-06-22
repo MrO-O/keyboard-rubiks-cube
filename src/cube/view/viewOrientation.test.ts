@@ -4,6 +4,7 @@ import {
   INITIAL_VIEW,
   getViewFaces,
   rollViewClockwise,
+  rollViewCounterClockwise,
   rotateViewLeft,
   rotateViewRight,
 } from './viewOrientation'
@@ -38,6 +39,19 @@ describe('view orientation', () => {
 
   it('returns after four clockwise rolls', () => {
     expect(repeat(rollViewClockwise, 4)).toEqual(INITIAL_VIEW)
+  })
+
+  it('clockwise and counterclockwise rolls are mutual inverses', () => {
+    expect(rollViewCounterClockwise(rollViewClockwise(INITIAL_VIEW))).toEqual(
+      INITIAL_VIEW,
+    )
+    expect(rollViewClockwise(rollViewCounterClockwise(INITIAL_VIEW))).toEqual(
+      INITIAL_VIEW,
+    )
+  })
+
+  it('returns after four counterclockwise rolls', () => {
+    expect(repeat(rollViewCounterClockwise, 4)).toEqual(INITIAL_VIEW)
   })
 
   it('does not change cube state', () => {

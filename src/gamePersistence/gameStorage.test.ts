@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyMove, createSolvedCube } from '../cube/model'
+import { applyMove, createSolvedCube, serializeCube } from '../cube/model'
 import { INITIAL_VIEW, rotateViewLeft } from '../cube/view'
 import {
   GAME_STORAGE_KEY,
@@ -48,6 +48,20 @@ describe('game storage', () => {
     expect(loadGameState(storage)).toEqual(
       JSON.parse(JSON.stringify(validGame())),
     )
+  })
+
+  it('ignores an unexpected damaged activeViewAnimation field', () => {
+    const storage = new MemoryStorage()
+    const game = { ...validGame(), activeViewAnimation: 'damaged-temporary-data' }
+    storage.setItem(GAME_STORAGE_KEY, JSON.stringify(game))
+
+    const loaded = loadGameState(storage)
+    expect(loaded).not.toBeNull()
+    expect(serializeCube(loaded!.cubeState)).toBe(
+      serializeCube(validGame().cubeState),
+    )
+    expect(loaded!.viewOrientation).toEqual(validGame().viewOrientation)
+    expect(loaded!.moveHistory).toEqual(validGame().moveHistory)
   })
 
   it.each([

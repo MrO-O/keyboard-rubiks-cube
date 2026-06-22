@@ -7,7 +7,10 @@ import type { AppSettings } from './types'
 
 export type BindableActionId = Exclude<
   ActionId,
-  'stopPeekRight' | 'stopPeekLeft' | 'clearPeek'
+  | 'stopPeekRight'
+  | 'stopPeekLeft'
+  | 'clearPeek'
+  | 'rollViewCounterClockwise'
 >
 
 export const ACTION_TITLES: Readonly<Record<BindableActionId, string>> = {

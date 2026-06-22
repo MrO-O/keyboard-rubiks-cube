@@ -31,6 +31,9 @@ export function SettingsPage({
     BindableActionId | 'wideTurnModifier' | null
   >(null)
   const [error, setError] = useState<string | null>(null)
+  const rollBinding = settings.keymap.find(
+    (binding) => binding.actionId === 'rollViewClockwise',
+  )
 
   useEffect(() => {
     if (!editingAction) return
@@ -101,6 +104,10 @@ export function SettingsPage({
           <h1>Settings</h1>
           <p>Browser-local controls and turn timing.</p>
         </div>
+        <p>
+          Shift + {displayBindingKey(rollBinding?.key ?? ' ')} rolls the current
+          front counterclockwise.
+        </p>
         <button onClick={onBack}>Back to play</button>
       </header>
 

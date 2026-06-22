@@ -17,6 +17,7 @@ export type ViewActionId =
   | 'rotateViewLeft'
   | 'rotateViewRight'
   | 'rollViewClockwise'
+  | 'rollViewCounterClockwise'
 
 export type PeekActionId =
   | 'startPeekRight'
@@ -45,7 +46,12 @@ export type CubeAction =
       readonly animationDurationMs?: number
     }
   | {
-      readonly id: ViewActionId | PeekActionId | UtilityActionId
+      readonly id: ViewActionId
+      readonly startedAt?: number
+      readonly animationDurationMs?: number
+    }
+  | {
+      readonly id: PeekActionId | UtilityActionId
     }
   | {
       readonly id: WideModifierActionId
@@ -71,6 +77,17 @@ export function isTurnActionId(actionId: ActionId): actionId is TurnActionId {
   return actionId in VIEW_ACTION_TO_FACE_KEY
 }
 
+export function isViewActionId(actionId: string): actionId is ViewActionId {
+  return [
+    'rotateViewUp',
+    'rotateViewDown',
+    'rotateViewLeft',
+    'rotateViewRight',
+    'rollViewClockwise',
+    'rollViewCounterClockwise',
+  ].includes(actionId)
+}
+
 export function getFaceForViewAction(
   viewOrientation: ViewOrientation,
   actionId: TurnActionId,
@@ -86,6 +103,18 @@ export function formatMoveLabel(
 ): string {
   const base = layers === 2 ? `${face}w` : face
   return direction === 1 ? base : `${base}'`
+}
+
+export function formatViewActionLabel(action: ViewActionId): string {
+  const labels: Record<ViewActionId, string> = {
+    rotateViewUp: 'View up',
+    rotateViewDown: 'View down',
+    rotateViewLeft: 'View left',
+    rotateViewRight: 'View right',
+    rollViewClockwise: 'Roll clockwise',
+    rollViewCounterClockwise: 'Roll counterclockwise',
+  }
+  return labels[action]
 }
 
 export function shouldPreventDefault(action: CubeAction | null): boolean {

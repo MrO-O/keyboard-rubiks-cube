@@ -1,5 +1,5 @@
 import type { CubeMove, CubeState } from '../model'
-import type { CubeAction } from '../controls'
+import type { CubeAction, ViewActionId } from '../controls'
 import type { PeekDirection, ViewOrientation } from '../view'
 
 export interface MoveHistoryEntry {
@@ -17,6 +17,14 @@ export interface ActiveTurnAnimation {
   readonly durationMs: number
 }
 
+export interface ActiveViewAnimation {
+  readonly action: ViewActionId
+  readonly fromOrientation: ViewOrientation
+  readonly toOrientation: ViewOrientation
+  readonly startedAt: number
+  readonly durationMs: number
+}
+
 export type CubeGameAction =
   | CubeAction
   | {
@@ -25,12 +33,18 @@ export type CubeGameAction =
       readonly completedAt: number
       readonly nextAnimationDurationMs: number
     }
+  | {
+      readonly id: 'completeViewAnimation'
+      readonly startedAt: number
+      readonly completedAt: number
+    }
 
 export interface CubeGameState {
   readonly cubeState: CubeState
   readonly viewOrientation: ViewOrientation
   readonly peekDirection: PeekDirection
   readonly activeTurnAnimation: ActiveTurnAnimation | null
+  readonly activeViewAnimation: ActiveViewAnimation | null
   readonly pendingTurn: CubeMove | null
   readonly wideTurnModifierActive: boolean
   readonly moveHistory: readonly MoveHistoryEntry[]

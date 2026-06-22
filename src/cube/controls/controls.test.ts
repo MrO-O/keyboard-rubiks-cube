@@ -25,6 +25,21 @@ describe('keyboard controls', () => {
     expect(keyToAction({ key })).toEqual({ id: actionId })
   })
 
+  it('maps Shift + Space to counterclockwise roll', () => {
+    expect(keyToAction({ key: ' ', shiftKey: true })).toEqual({
+      id: 'rollViewCounterClockwise',
+    })
+  })
+
+  it.each(['W', 'A', 'S', 'D'])(
+    'treats Shift + %s like its regular view action',
+    (key) => {
+      expect(keyToAction({ key, shiftKey: true })).toEqual(
+        keyToAction({ key }),
+      )
+    },
+  )
+
   it.each([
     ['Q', 'startPeekRight'],
     ['E', 'startPeekLeft'],

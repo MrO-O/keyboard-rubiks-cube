@@ -9,13 +9,19 @@ import {
 import {
   INITIAL_VIEW,
   rollViewClockwise,
+  rollViewCounterClockwise,
   rotateViewDown,
   rotateViewLeft,
   rotateViewRight,
   rotateViewUp,
   type ViewOrientation,
 } from '../view'
-import { formatMoveLabel, getFaceForViewAction } from '../controls'
+import {
+  formatMoveLabel,
+  formatViewActionLabel,
+  getFaceForViewAction,
+  type ViewActionId,
+} from '../controls'
 import {
   TURN_ANIMATION_MS,
   type CubeGameAction,
@@ -29,12 +35,30 @@ export function createInitialCubeGameState(): CubeGameState {
     viewOrientation: INITIAL_VIEW,
     peekDirection: null,
     activeTurnAnimation: null,
+    activeViewAnimation: null,
     pendingTurn: null,
     wideTurnModifierActive: false,
     moveHistory: [],
     lastActionLabel: 'Ready',
     isSolved: true,
   }
+}
+
+function isAllowedDuringViewAnimation(
+  actionId: CubeGameAction['id'],
+): boolean {
+  return [
+    'completeViewAnimation',
+    'resetCube',
+    'startPeekRight',
+    'startPeekLeft',
+    'stopPeekRight',
+    'stopPeekLeft',
+    'clearPeek',
+    'startWideTurnModifier',
+    'stopWideTurnModifier',
+    'clearWideTurnModifier',
+  ].includes(actionId)
 }
 
 function isBlockedDuringAnimation(actionId: CubeGameAction['id']): boolean {
@@ -56,6 +80,13 @@ export function gameReducer(
   state: CubeGameState,
   action: CubeGameAction,
 ): CubeGameState {
+  if (
+    state.activeViewAnimation &&
+    !isAllowedDuringViewAnimation(action.id)
+  ) {
+    return state
+  }
+
   if (state.activeTurnAnimation && 'direction' in action) {
     return bufferUserTurn(state, {
       face: getFaceForViewAction(state.viewOrientation, action.id),
@@ -95,35 +126,25 @@ export function gameReducer(
       )
 
     case 'rotateViewUp':
-      return updateView(state, rotateViewUp(state.viewOrientation), 'View up')
+      return startViewAnimation(state, action, 'View up')
 
     case 'rotateViewDown':
-      return updateView(
-        state,
-        rotateViewDown(state.viewOrientation),
-        'View down',
-      )
+      return startViewAnimation(state, action, 'View down')
 
     case 'rotateViewLeft':
-      return updateView(
-        state,
-        rotateViewLeft(state.viewOrientation),
-        'View left',
-      )
+      return startViewAnimation(state, action, 'View left')
 
     case 'rotateViewRight':
-      return updateView(
-        state,
-        rotateViewRight(state.viewOrientation),
-        'View right',
-      )
+      return startViewAnimation(state, action, 'View right')
 
     case 'rollViewClockwise':
-      return updateView(
-        state,
-        rollViewClockwise(state.viewOrientation),
-        'Roll view',
-      )
+      return startViewAnimation(state, action, 'Roll clockwise')
+
+    case 'rollViewCounterClockwise':
+      return startViewAnimation(state, action, 'Roll counterclockwise')
+
+    case 'completeViewAnimation':
+      return completeViewAnimation(state, action.startedAt)
 
     case 'startPeekRight':
       return {
@@ -191,12 +212,56 @@ function clearPeek(state: CubeGameState): CubeGameState {
   return { ...state, peekDirection: null, lastActionLabel: 'Peek cleared' }
 }
 
-function updateView(
+function startViewAnimation(
   state: CubeGameState,
-  viewOrientation: ViewOrientation,
+  action: Extract<CubeGameAction, { id: ViewActionId }>,
   lastActionLabel: string,
 ): CubeGameState {
-  return { ...state, viewOrientation, lastActionLabel }
+  return {
+    ...state,
+    activeViewAnimation: {
+      action: action.id,
+      fromOrientation: state.viewOrientation,
+      toOrientation: getNextViewOrientation(state.viewOrientation, action.id),
+      startedAt: action.startedAt ?? 0,
+      durationMs: action.animationDurationMs ?? TURN_ANIMATION_MS,
+    },
+    lastActionLabel,
+  }
+}
+
+function getNextViewOrientation(
+  view: ViewOrientation,
+  action: ViewActionId,
+): ViewOrientation {
+  switch (action) {
+    case 'rotateViewUp':
+      return rotateViewUp(view)
+    case 'rotateViewDown':
+      return rotateViewDown(view)
+    case 'rotateViewLeft':
+      return rotateViewLeft(view)
+    case 'rotateViewRight':
+      return rotateViewRight(view)
+    case 'rollViewClockwise':
+      return rollViewClockwise(view)
+    case 'rollViewCounterClockwise':
+      return rollViewCounterClockwise(view)
+  }
+}
+
+function completeViewAnimation(
+  state: CubeGameState,
+  startedAt: number,
+): CubeGameState {
+  const animation = state.activeViewAnimation
+  if (!animation || animation.startedAt !== startedAt) return state
+  return {
+    ...state,
+    viewOrientation: animation.toOrientation,
+    activeViewAnimation: null,
+    lastActionLabel: formatViewActionLabel(animation.action),
+  }
 }
 
 function startUserTurn(
@@ -247,6 +312,7 @@ function completeUserTurn(
     ...state,
     cubeState: animation.toState,
     activeTurnAnimation: null,
+    activeViewAnimation: null,
     moveHistory: [...state.moveHistory, { move: animation.move, label }],
     lastActionLabel: `Move ${label}`,
     isSolved: isSolved(animation.toState),
@@ -285,6 +351,7 @@ function resetCube(): CubeGameState {
     viewOrientation: INITIAL_VIEW,
     peekDirection: null,
     activeTurnAnimation: null,
+    activeViewAnimation: null,
     pendingTurn: null,
     wideTurnModifierActive: false,
     moveHistory: [],
@@ -300,6 +367,7 @@ function scrambleCube(viewOrientation: ViewOrientation): CubeGameState {
     viewOrientation,
     peekDirection: null,
     activeTurnAnimation: null,
+    activeViewAnimation: null,
     pendingTurn: null,
     wideTurnModifierActive: false,
     moveHistory: [],

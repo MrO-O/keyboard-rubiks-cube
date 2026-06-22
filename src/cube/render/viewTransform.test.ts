@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { createSolvedCube, serializeCube } from '../model'
-import { INITIAL_VIEW, rotateViewLeft } from '../view'
+import {
+  INITIAL_VIEW,
+  rollViewClockwise,
+  rollViewCounterClockwise,
+  rotateViewLeft,
+} from '../view'
 import {
   PEEK_YAW_DEGREES,
   getCubeGroupRotation,
   getDisplayRotation,
+  getInterpolatedViewRotation,
   getPeekYawRadians,
 } from './viewTransform'
 
@@ -48,5 +54,35 @@ describe('view render transform', () => {
 
     expect(getDisplayRotation(INITIAL_VIEW, 'showRight')).not.toEqual(regular)
     expect(getDisplayRotation(INITIAL_VIEW, 'showLeft')).not.toEqual(regular)
+  })
+
+  it('interpolates exactly from and to view orientations', () => {
+    const to = rotateViewLeft(INITIAL_VIEW)
+    expect(getInterpolatedViewRotation(INITIAL_VIEW, to, 0)).toEqual(
+      getCubeGroupRotation(INITIAL_VIEW),
+    )
+    expect(getInterpolatedViewRotation(INITIAL_VIEW, to, 1)).toEqual(
+      getCubeGroupRotation(to),
+    )
+    const middle = getInterpolatedViewRotation(INITIAL_VIEW, to, 0.5)
+    expect(middle).not.toEqual(getCubeGroupRotation(INITIAL_VIEW))
+    expect(middle).not.toEqual(getCubeGroupRotation(to))
+  })
+
+  it('has different clockwise and counterclockwise roll targets', () => {
+    expect(getCubeGroupRotation(rollViewClockwise(INITIAL_VIEW))).not.toEqual(
+      getCubeGroupRotation(rollViewCounterClockwise(INITIAL_VIEW)),
+    )
+  })
+
+  it('applies peek after interpolating a view animation', () => {
+    const animation = {
+      fromOrientation: INITIAL_VIEW,
+      toOrientation: rotateViewLeft(INITIAL_VIEW),
+    }
+    const regular = getDisplayRotation(INITIAL_VIEW, null, animation, 0.5)
+    expect(
+      getDisplayRotation(INITIAL_VIEW, 'showRight', animation, 0.5),
+    ).not.toEqual(regular)
   })
 })

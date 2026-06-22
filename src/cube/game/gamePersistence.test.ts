@@ -38,10 +38,22 @@ function completeFrontTurn() {
   })
 }
 
+function completeView(state = createInitialCubeGameState()) {
+  const active = gameReducer(state, {
+    id: 'rotateViewLeft',
+    startedAt: 100,
+  })
+  return gameReducer(active, {
+    id: 'completeViewAnimation',
+    startedAt: 100,
+    completedAt: 280,
+  })
+}
+
 describe('game persistence integration', () => {
   it('restores cubeState, viewOrientation, and moveHistory', () => {
     const moved = completeFrontTurn()
-    const rotated = gameReducer(moved, { id: 'rotateViewLeft' })
+    const rotated = completeView(moved)
     const persisted = createPersistedGameState(
       rotated,
       '2026-06-19T00:00:00.000Z',
@@ -56,6 +68,7 @@ describe('game persistence integration', () => {
       rotated.moveHistory.map((entry) => entry.move),
     )
     expect(restored.activeTurnAnimation).toBeNull()
+    expect(restored.activeViewAnimation).toBeNull()
     expect(restored.pendingTurn).toBeNull()
     expect(restored.peekDirection).toBeNull()
   })
@@ -100,7 +113,7 @@ describe('game persistence integration', () => {
     const reset = gameReducer(moved, { id: 'resetCube' })
     const scrambled = gameReducer(initial, { id: 'scrambleCube' })
     const undone = gameReducer(moved, { id: 'undoMove' })
-    const rotated = gameReducer(initial, { id: 'rotateViewLeft' })
+    const rotated = completeView(initial)
 
     expect(shouldAutosaveGameState(initial, moved)).toBe(true)
     expect(shouldAutosaveGameState(moved, reset)).toBe(true)
@@ -125,6 +138,10 @@ describe('game persistence integration', () => {
     const initial = createInitialCubeGameState()
     const peeking = gameReducer(initial, { id: 'startPeekRight' })
     const wideModifier = gameReducer(initial, { id: 'startWideTurnModifier' })
+    const activeView = gameReducer(initial, {
+      id: 'rotateViewLeft',
+      startedAt: 100,
+    })
     const active = gameReducer(initial, {
       id: 'turnViewFront',
       direction: 1,
@@ -138,12 +155,34 @@ describe('game persistence integration', () => {
 
     expect(shouldAutosaveGameState(initial, peeking)).toBe(false)
     expect(shouldAutosaveGameState(initial, wideModifier)).toBe(false)
+    expect(shouldAutosaveGameState(initial, activeView)).toBe(false)
     expect(shouldAutosaveGameState(initial, active)).toBe(false)
     expect(shouldAutosaveGameState(active, pending)).toBe(false)
 
     const persisted = createPersistedGameState(pending)
     expect(persisted).not.toHaveProperty('peekDirection')
     expect(persisted).not.toHaveProperty('activeTurnAnimation')
+    expect(persisted).not.toHaveProperty('activeViewAnimation')
     expect(persisted).not.toHaveProperty('pendingTurn')
+  })
+
+  it('autosaves the committed orientation after view animation completes', () => {
+    const initial = createInitialCubeGameState()
+    const active = gameReducer(initial, {
+      id: 'rollViewCounterClockwise',
+      startedAt: 100,
+    })
+    const completed = gameReducer(active, {
+      id: 'completeViewAnimation',
+      startedAt: 100,
+      completedAt: 280,
+    })
+    const storage = new MemoryStorage()
+
+    expect(shouldAutosaveGameState(initial, active)).toBe(false)
+    expect(autosaveGameState(active, completed, storage)).toBe(true)
+    const saved = JSON.parse(storage.values.get(GAME_STORAGE_KEY)!)
+    expect(saved.viewOrientation).toEqual(completed.viewOrientation)
+    expect(saved).not.toHaveProperty('activeViewAnimation')
   })
 })

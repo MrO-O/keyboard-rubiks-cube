@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import {
   displayBindingKey,
   formatMoveLabel,
+  formatViewActionLabel,
   keyToAction,
   shouldPreventDefault,
 } from '../cube/controls'
@@ -17,9 +18,17 @@ interface PlayPageProps {
 
 export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
   const { settings } = useSettings()
-  const { state, dispatch, completeTurnAnimation } = game
+  const {
+    state,
+    dispatch,
+    completeTurnAnimation,
+    completeViewAnimation,
+  } = game
   const recentMoves = state.moveHistory.slice(-10)
   const viewFaces = getViewFaces(state.viewOrientation)
+  const rollBinding = settings.keymap.find(
+    (binding) => binding.actionId === 'rollViewClockwise',
+  )
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -83,7 +92,9 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
           viewOrientation={state.viewOrientation}
           peekDirection={state.peekDirection}
           activeTurnAnimation={state.activeTurnAnimation}
+          activeViewAnimation={state.activeViewAnimation}
           onTurnAnimationComplete={completeTurnAnimation}
+          onViewAnimationComplete={completeViewAnimation}
         />
       </section>
       <section className="game-panel" aria-label="Cube controls and status">
@@ -129,6 +140,14 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
                     state.pendingTurn.layers,
                   )
                 : 'none'}
+            </strong>
+          </p>
+          <p>
+            View animation:{' '}
+            <strong>
+              {state.activeViewAnimation
+                ? formatViewActionLabel(state.activeViewAnimation.action)
+                : 'idle'}
             </strong>
           </p>
         </div>
@@ -187,6 +206,10 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
             ))}
           </ul>
           <p>Shift + U/I/H/J/K/L turns that face counterclockwise.</p>
+          <p>
+            Shift + {displayBindingKey(rollBinding?.key ?? ' ')} rolls the
+            current front counterclockwise.
+          </p>
           <p>
             Hold {displayBindingKey(settings.wideTurnModifierKey)} +
             U/I/H/J/K/L for a two-layer wide turn; add Shift for its inverse.

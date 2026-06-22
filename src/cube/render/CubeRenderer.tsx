@@ -1,5 +1,5 @@
 import type { CubeState } from '../model'
-import type { ActiveTurnAnimation } from '../game'
+import type { ActiveTurnAnimation, ActiveViewAnimation } from '../game'
 import type { PeekDirection, ViewOrientation } from '../view'
 import { CubieMesh } from './CubieMesh'
 import { getCubeRenderData } from './renderData'
@@ -11,6 +11,7 @@ interface CubeRendererProps {
   readonly viewOrientation: ViewOrientation
   readonly peekDirection: PeekDirection
   readonly activeTurnAnimation: ActiveTurnAnimation | null
+  readonly activeViewAnimation: ActiveViewAnimation | null
   readonly animationProgress: number
 }
 
@@ -19,9 +20,15 @@ export function CubeRenderer({
   viewOrientation,
   peekDirection,
   activeTurnAnimation,
+  activeViewAnimation,
   animationProgress,
 }: CubeRendererProps) {
-  const quaternion = getDisplayRotation(viewOrientation, peekDirection)
+  const quaternion = getDisplayRotation(
+    viewOrientation,
+    peekDirection,
+    activeViewAnimation,
+    animationProgress,
+  )
 
   if (activeTurnAnimation) {
     const groups = getTurnRenderGroups(

@@ -28,6 +28,7 @@ describe('cube render data', () => {
       viewOrientation: INITIAL_VIEW,
       peekDirection: null,
       activeTurnAnimation: null,
+      activeViewAnimation: null,
       animationProgress: 0,
     }) as ReactElement<{ children: ReactNode }>
 

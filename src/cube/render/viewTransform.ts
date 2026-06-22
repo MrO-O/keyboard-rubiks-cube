@@ -6,6 +6,7 @@ import {
   type ViewOrientation,
 } from '../view'
 import type { QuaternionTuple } from './renderTypes'
+import { easeTurnProgress } from './turnAnimation'
 
 const EPSILON = 1e-10
 export const PEEK_YAW_DEGREES = 24
@@ -60,8 +61,16 @@ export function getPeekYawRadians(peekDirection: PeekDirection): number {
 export function getDisplayRotation(
   viewOrientation: ViewOrientation,
   peekDirection: PeekDirection,
+  activeViewAnimation?: ViewAnimationTransform | null,
+  progress = 0,
 ): QuaternionTuple {
-  const viewRotation = getCubeGroupRotation(viewOrientation)
+  const viewRotation = activeViewAnimation
+    ? getInterpolatedViewRotation(
+        activeViewAnimation.fromOrientation,
+        activeViewAnimation.toOrientation,
+        progress,
+      )
+    : getCubeGroupRotation(viewOrientation)
   if (!peekDirection) return viewRotation
 
   // Negative world-Y yaw turns the current right face toward the +Z camera.
@@ -72,6 +81,23 @@ export function getDisplayRotation(
   )
 
   return toTuple(peekQuaternion.multiply(viewQuaternion).normalize())
+}
+
+export interface ViewAnimationTransform {
+  readonly fromOrientation: ViewOrientation
+  readonly toOrientation: ViewOrientation
+}
+
+export function getInterpolatedViewRotation(
+  fromOrientation: ViewOrientation,
+  toOrientation: ViewOrientation,
+  progress: number,
+): QuaternionTuple {
+  if (progress <= 0) return getCubeGroupRotation(fromOrientation)
+  if (progress >= 1) return getCubeGroupRotation(toOrientation)
+  const from = new Quaternion(...getCubeGroupRotation(fromOrientation))
+  const to = new Quaternion(...getCubeGroupRotation(toOrientation))
+  return toTuple(from.slerp(to, easeTurnProgress(progress)).normalize())
 }
 
 function toTuple(quaternion: Quaternion): QuaternionTuple {

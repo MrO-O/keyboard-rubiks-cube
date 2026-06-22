@@ -40,6 +40,10 @@ export function keyToAction(
     eventType === 'keydown' ? binding.actionId : binding.keyUpActionId
   if (!actionId) return null
 
+  if (actionId === 'rollViewClockwise' && event.shiftKey) {
+    return { id: 'rollViewCounterClockwise' }
+  }
+
   if (isTurnActionId(actionId)) {
     return {
       id: actionId,

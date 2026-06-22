@@ -59,3 +59,9 @@ export function rotateViewDown(view: ViewOrientation): ViewOrientation {
 export function rollViewClockwise(view: ViewOrientation): ViewOrientation {
   return { up: getViewFaces(view).left, front: view.front }
 }
+
+export function rollViewCounterClockwise(
+  view: ViewOrientation,
+): ViewOrientation {
+  return { up: getViewFaces(view).right, front: view.front }
+}

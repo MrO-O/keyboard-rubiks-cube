@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react'
-import { formatMoveLabel, type CubeAction } from '../controls'
+import {
+  formatMoveLabel,
+  isViewActionId,
+  type CubeAction,
+} from '../controls'
 import { isSolved } from '../model'
 import {
   clearSavedGame,
@@ -24,6 +28,7 @@ export function restoreGameState(
     })),
     peekDirection: null,
     activeTurnAnimation: null,
+    activeViewAnimation: null,
     pendingTurn: null,
     wideTurnModifierActive: false,
     lastActionLabel: 'Restored saved game',
@@ -104,6 +109,14 @@ export function useCubeGame(
         })
         return
       }
+      if (isViewActionId(action.id)) {
+        dispatch({
+          id: action.id,
+          startedAt: performance.now(),
+          animationDurationMs,
+        })
+        return
+      }
       dispatch(action)
     },
     [animationDurationMs],
@@ -121,6 +134,14 @@ export function useCubeGame(
     [animationDurationMs],
   )
 
+  const completeViewAnimation = useCallback((startedAt: number) => {
+    dispatch({
+      id: 'completeViewAnimation',
+      startedAt,
+      completedAt: performance.now(),
+    })
+  }, [])
+
   const clearGame = useCallback(() => {
     skipNextAutosave.current = true
     clearSavedGame(storage)
@@ -131,6 +152,7 @@ export function useCubeGame(
     state,
     dispatch: dispatchCubeAction,
     completeTurnAnimation,
+    completeViewAnimation,
     clearSavedGame: clearGame,
   }
 }
