@@ -1,6 +1,6 @@
 import type { KeyBinding } from './actions'
 
-export const DEFAULT_WIDE_TURN_MODIFIER_KEY = ';'
+export const DEFAULT_WIDE_TURN_MODIFIER_KEY = 'F'
 
 const ACTION_DESCRIPTIONS: Readonly<Record<KeyBinding['actionId'], string>> = {
   turnViewUp: 'turn top face',
@@ -45,13 +45,13 @@ function binding(value: Omit<KeyBinding, 'label'>): KeyBinding {
 
 export const DEFAULT_KEYMAP: readonly KeyBinding[] = [
   binding({ key: 'U', actionId: 'turnViewUp' }),
-  binding({ key: 'I', actionId: 'turnViewDown' }),
-  binding({ key: 'H', actionId: 'turnViewLeft' }),
-  binding({ key: 'J', actionId: 'turnViewRight' }),
-  binding({ key: 'K', actionId: 'turnViewFront' }),
+  binding({ key: 'J', actionId: 'turnViewDown' }),
+  binding({ key: 'I', actionId: 'turnViewLeft' }),
+  binding({ key: 'K', actionId: 'turnViewRight' }),
+  binding({ key: 'O', actionId: 'turnViewFront' }),
   binding({ key: 'L', actionId: 'turnViewBack' }),
-  binding({ key: 'W', actionId: 'rotateViewUp' }),
-  binding({ key: 'S', actionId: 'rotateViewDown' }),
+  binding({ key: 'S', actionId: 'rotateViewUp' }),
+  binding({ key: 'W', actionId: 'rotateViewDown' }),
   binding({ key: 'A', actionId: 'rotateViewLeft' }),
   binding({ key: 'D', actionId: 'rotateViewRight' }),
   binding({
@@ -59,12 +59,12 @@ export const DEFAULT_KEYMAP: readonly KeyBinding[] = [
     actionId: 'rollViewClockwise',
   }),
   binding({
-    key: 'Q',
+    key: 'E',
     actionId: 'startPeekRight',
     keyUpActionId: 'stopPeekRight',
   }),
   binding({
-    key: 'E',
+    key: 'Q',
     actionId: 'startPeekLeft',
     keyUpActionId: 'stopPeekLeft',
   }),
