@@ -3,6 +3,7 @@ import {
   displayBindingKey,
   formatMoveLabel,
   formatViewActionLabel,
+  isTurnActionId,
   keyToAction,
   shouldPreventDefault,
 } from '../cube/controls'
@@ -28,6 +29,18 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
   const viewFaces = getViewFaces(state.viewOrientation)
   const rollBinding = settings.keymap.find(
     (binding) => binding.actionId === 'rollViewClockwise',
+  )
+  const turnKeys = settings.keymap
+    .filter((binding) => isTurnActionId(binding.actionId))
+    .map((binding) => displayBindingKey(binding.key))
+    .join('/')
+  const rightPeekKey = displayBindingKey(
+    settings.keymap.find((binding) => binding.actionId === 'startPeekRight')
+      ?.key ?? 'E',
+  )
+  const leftPeekKey = displayBindingKey(
+    settings.keymap.find((binding) => binding.actionId === 'startPeekLeft')
+      ?.key ?? 'Q',
   )
 
   useEffect(() => {
@@ -60,7 +73,6 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
     }
 
     function handleBlur() {
-      dispatch({ id: 'clearPeek' })
       dispatch({ id: 'clearWideTurnModifier' })
     }
 
@@ -205,14 +217,18 @@ export function PlayPage({ game, onOpenSettings }: PlayPageProps) {
               <li key={binding.key}>{binding.label}</li>
             ))}
           </ul>
-          <p>Shift + U/I/H/J/K/L turns that face counterclockwise.</p>
+          <p>Shift + {turnKeys} turns that face counterclockwise.</p>
           <p>
             Shift + {displayBindingKey(rollBinding?.key ?? ' ')} rolls the
             current front counterclockwise.
           </p>
           <p>
-            Hold {displayBindingKey(settings.wideTurnModifierKey)} +
-            U/I/H/J/K/L for a two-layer wide turn; add Shift for its inverse.
+            Hold {displayBindingKey(settings.wideTurnModifierKey)} + {turnKeys}{' '}
+            for a two-layer wide turn; add Shift for its inverse.
+          </p>
+          <p>
+            Press {rightPeekKey} for the right peek or {leftPeekKey} for the
+            left peek; press the opposite peek key to return.
           </p>
         </section>
 

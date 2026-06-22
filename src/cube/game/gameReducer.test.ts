@@ -105,13 +105,13 @@ describe('cube game reducer', () => {
     expect(active.pendingTurn).toBeNull()
   })
 
-  it('keeps peek responsive and reset cancels view animation', () => {
+  it('keeps latched peek responsive and reset cancels view animation', () => {
     const active = gameReducer(createInitialCubeGameState(), {
       id: 'rotateViewLeft',
       startedAt: 100,
     })
     const peeking = gameReducer(active, { id: 'startPeekRight' })
-    const released = gameReducer(peeking, { id: 'stopPeekRight' })
+    const released = gameReducer(peeking, { id: 'startPeekLeft' })
     const reset = gameReducer(peeking, { id: 'resetCube' })
 
     expect(peeking.peekDirection).toBe('showRight')
@@ -332,17 +332,22 @@ describe('cube game reducer', () => {
     },
   )
 
-  it('uses the latest peek key and clears only the active direction', () => {
+  it('latches one side and uses the opposite key to restore the main view', () => {
     const right = gameReducer(createInitialCubeGameState(), {
       id: 'startPeekRight',
     })
-    const left = gameReducer(right, { id: 'startPeekLeft' })
-    const releaseInactive = gameReducer(left, { id: 'stopPeekRight' })
-    const releaseActive = gameReducer(releaseInactive, { id: 'stopPeekLeft' })
+    const heldAfterKeyup = gameReducer(right, { id: 'stopPeekRight' })
+    const restored = gameReducer(heldAfterKeyup, { id: 'startPeekLeft' })
+    const left = gameReducer(restored, { id: 'startPeekLeft' })
+    const sameSideAgain = gameReducer(left, { id: 'startPeekLeft' })
+    const restoredAgain = gameReducer(sameSideAgain, { id: 'startPeekRight' })
 
+    expect(right.peekDirection).toBe('showRight')
+    expect(heldAfterKeyup).toBe(right)
+    expect(restored.peekDirection).toBeNull()
     expect(left.peekDirection).toBe('showLeft')
-    expect(releaseInactive.peekDirection).toBe('showLeft')
-    expect(releaseActive.peekDirection).toBeNull()
+    expect(sameSideAgain).toBe(left)
+    expect(restoredAgain.peekDirection).toBeNull()
   })
 
   it.each(['showRight', 'showLeft'] as const)(
@@ -505,9 +510,9 @@ describe('cube game reducer', () => {
     expect(staleCompletion).toBe(reset)
   })
 
-  it('allows peek changes and keyup while animation is active', () => {
+  it('allows opposite peek key to restore while animation is active', () => {
     const peeking = gameReducer(startFrontTurn(), { id: 'startPeekRight' })
-    const released = gameReducer(peeking, { id: 'stopPeekRight' })
+    const released = gameReducer(peeking, { id: 'startPeekLeft' })
 
     expect(peeking.activeTurnAnimation).not.toBeNull()
     expect(peeking.peekDirection).toBe('showRight')

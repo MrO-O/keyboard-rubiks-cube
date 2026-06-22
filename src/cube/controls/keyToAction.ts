@@ -36,6 +36,14 @@ export function keyToAction(
   const binding = keymap.find((candidate) => candidate.key === key)
   if (!binding) return null
 
+  if (
+    eventType === 'keyup' &&
+    (binding.actionId === 'startPeekRight' ||
+      binding.actionId === 'startPeekLeft')
+  ) {
+    return null
+  }
+
   const actionId =
     eventType === 'keydown' ? binding.actionId : binding.keyUpActionId
   if (!actionId) return null

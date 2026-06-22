@@ -10,14 +10,23 @@ import { keyToAction } from './keyToAction'
 
 describe('keyboard controls', () => {
   it('includes default face turn bindings', () => {
-    const keys = DEFAULT_KEYMAP.map((binding) => binding.key)
+    const actions = DEFAULT_KEYMAP.map((binding) => binding.actionId)
 
-    expect(keys).toEqual(expect.arrayContaining(['U', 'I', 'H', 'J', 'K', 'L']))
+    expect(actions).toEqual(
+      expect.arrayContaining([
+        'turnViewUp',
+        'turnViewDown',
+        'turnViewLeft',
+        'turnViewRight',
+        'turnViewFront',
+        'turnViewBack',
+      ]),
+    )
   })
 
   it.each([
-    ['W', 'rotateViewUp'],
-    ['S', 'rotateViewDown'],
+    ['S', 'rotateViewUp'],
+    ['W', 'rotateViewDown'],
     ['A', 'rotateViewLeft'],
     ['D', 'rotateViewRight'],
     [' ', 'rollViewClockwise'],
@@ -41,25 +50,25 @@ describe('keyboard controls', () => {
   )
 
   it.each([
-    ['Q', 'startPeekRight'],
-    ['E', 'startPeekLeft'],
+    ['E', 'startPeekRight'],
+    ['Q', 'startPeekLeft'],
   ])('maps %s keydown to %s', (key, actionId) => {
     expect(keyToAction({ key }, 'keydown')).toEqual({ id: actionId })
   })
 
-  it.each([
-    ['Q', 'stopPeekRight'],
-    ['E', 'stopPeekLeft'],
-  ])('maps %s keyup to %s', (key, actionId) => {
-    expect(keyToAction({ key }, 'keyup')).toEqual({ id: actionId })
-  })
+  it.each(['Q', 'E'])(
+    'does not clear latched peek when %s is released',
+    (key) => {
+      expect(keyToAction({ key }, 'keyup')).toBeNull()
+    },
+  )
 
   it('does not emit keyup actions for regular bindings', () => {
     expect(keyToAction({ key: 'K' }, 'keyup')).toBeNull()
   })
 
   it('recognizes regular key presses', () => {
-    expect(keyToAction({ key: 'k' })).toEqual({
+    expect(keyToAction({ key: 'o' })).toEqual({
       id: 'turnViewFront',
       direction: 1,
       layers: 1,
@@ -67,7 +76,7 @@ describe('keyboard controls', () => {
   })
 
   it('uses inverse direction for shift face turns', () => {
-    expect(keyToAction({ key: 'K', shiftKey: true })).toEqual({
+    expect(keyToAction({ key: 'O', shiftKey: true })).toEqual({
       id: 'turnViewFront',
       direction: -1,
       layers: 1,
@@ -75,11 +84,11 @@ describe('keyboard controls', () => {
   })
 
   it('uses semicolon as the default wide modifier', () => {
-    expect(DEFAULT_WIDE_TURN_MODIFIER_KEY).toBe(';')
-    expect(keyToAction({ key: ';' }, 'keydown')).toEqual({
+    expect(DEFAULT_WIDE_TURN_MODIFIER_KEY).toBe('F')
+    expect(keyToAction({ key: 'F' }, 'keydown')).toEqual({
       id: 'startWideTurnModifier',
     })
-    expect(keyToAction({ key: ';' }, 'keyup')).toEqual({
+    expect(keyToAction({ key: 'F' }, 'keyup')).toEqual({
       id: 'stopWideTurnModifier',
     })
   })
@@ -92,17 +101,17 @@ describe('keyboard controls', () => {
   })
 
   it('creates clockwise and inverse wide turns while the modifier is active', () => {
-    expect(keyToAction({ key: 'K' }, 'keydown', DEFAULT_KEYMAP, ';', true)).toEqual({
+    expect(keyToAction({ key: 'O' }, 'keydown', DEFAULT_KEYMAP, 'F', true)).toEqual({
       id: 'turnViewFront',
       direction: 1,
       layers: 2,
     })
     expect(
       keyToAction(
-        { key: 'K', shiftKey: true },
+        { key: 'O', shiftKey: true },
         'keydown',
         DEFAULT_KEYMAP,
-        ';',
+        'F',
         true,
       ),
     ).toEqual({ id: 'turnViewFront', direction: -1, layers: 2 })

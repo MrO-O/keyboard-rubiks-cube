@@ -72,17 +72,20 @@ describe('PlayPage', () => {
     expect(markup).toContain('Game autosaved locally')
     expect(markup).toContain('Move count:')
     expect(markup).toContain('Solved:')
-    expect(markup).toContain('K: turn front face')
-    expect(markup).toContain('Shift + U/I/H/J/K/L')
-    expect(markup).toContain('Hold ; + U/I/H/J/K/L')
-    expect(markup).toContain('W: rotate view up')
+    expect(markup).toContain('O: turn front face')
+    expect(markup).toContain('Shift + U/J/I/K/O/L')
+    expect(markup).toContain('Hold F + U/J/I/K/O/L')
+    expect(markup).toContain('S: rotate view up')
     expect(markup).toContain('Space: roll current front clockwise')
     expect(markup).toContain('View orientation')
     expect(markup).toContain('Up:')
     expect(markup).toContain('Front:')
     expect(markup).toContain('Back:')
-    expect(markup).toContain('Hold Q: peek right side')
-    expect(markup).toContain('Hold E: peek left side')
+    expect(markup).toContain('E: peek right side')
+    expect(markup).toContain('Q: peek left side')
+    expect(markup).toContain(
+      'Press E for the right peek or Q for the left peek',
+    )
     expect(markup).toContain('Peek:')
     expect(markup).toContain('none')
     expect(markup).toContain('Turning:')
@@ -124,7 +127,7 @@ describe('PlayPage', () => {
     const markup = renderPlay(settings)
 
     expect(markup).toContain('P: turn front face')
-    expect(markup).not.toContain('K: turn front face')
+    expect(markup).not.toContain('O: turn front face')
   })
 
   it('renders the custom wide modifier', () => {
@@ -133,8 +136,8 @@ describe('PlayPage', () => {
       wideTurnModifierKey: 'G',
     }
     const markup = renderPlay(settings)
-    expect(markup).toContain('Hold G + U/I/H/J/K/L')
-    expect(markup).not.toContain('Hold ; + U/I/H/J/K/L')
+    expect(markup).toContain('Hold G + U/J/I/K/O/L')
+    expect(markup).not.toContain('Hold F + U/J/I/K/O/L')
   })
 
   it('renders the active view animation action', () => {
@@ -155,11 +158,11 @@ describe('PlayPage', () => {
 
   it('renders Shift help for a custom roll key', () => {
     const defaults = createDefaultSettings()
-    const result = rebindAction(defaults.keymap, 'rollViewClockwise', 'O')
+    const result = rebindAction(defaults.keymap, 'rollViewClockwise', 'V')
     if (!result.ok) throw new Error(result.error)
     const settings: AppSettings = { ...defaults, keymap: result.keymap }
     const markup = renderPlay(settings)
-    expect(markup).toContain('Shift + O rolls the current front')
+    expect(markup).toContain('Shift + V rolls the current front')
     expect(markup).not.toContain('Shift + Space rolls the current front')
   })
 })

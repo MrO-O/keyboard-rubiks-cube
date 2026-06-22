@@ -31,12 +31,7 @@ export function displayBindingKey(key: string): string {
 
 export function formatKeyBindingLabel(binding: KeyBinding): string {
   const key = displayBindingKey(binding.key)
-  const prefix =
-    binding.actionId === 'startPeekRight' ||
-    binding.actionId === 'startPeekLeft'
-      ? `Hold ${key}`
-      : key
-  return `${prefix}: ${ACTION_DESCRIPTIONS[binding.actionId]}`
+  return `${key}: ${ACTION_DESCRIPTIONS[binding.actionId]}`
 }
 
 function binding(value: Omit<KeyBinding, 'label'>): KeyBinding {

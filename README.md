@@ -13,7 +13,7 @@ support. Single-layer and two-layer wide turns use the same pure cubie engine.
 The app can be deployed as a static site with GitHub Pages.
 
 The Play page renders the current `CubeState` as 26 visible cubies with colored
-stickers. U/I/H/J/K/L turn the top, bottom, left, right, front, and back faces
+stickers. U/J/I/K/O/L turn the top, bottom, left, right, front, and back faces
 for the current `viewOrientation`; Shift + those keys turns the selected face in
 the inverse direction. R resets to solved, X scrambles, and Z undoes the last
 ordinary user turn. Scramble replaces the cube state and clears ordinary move
@@ -30,8 +30,8 @@ While a face turn is animating, additional face turns, WSAD/Space view changes,
 scramble, and undo follow separate input policies. One additional face turn is
 stored as a concrete physical `CubeMove` in the single-slot `pendingTurn`
 buffer. Repeated face-turn inputs overwrite that slot, so the latest input wins.
-WSAD/Space, scramble, and undo remain ignored. Q/E peek start and release remain
-available so peek state cannot become stuck. Reset immediately cancels the
+WSAD/Space, scramble, and undo remain ignored. Q/E peek key presses remain
+available. Reset immediately cancels the
 animation, clears `pendingTurn`, and restores the solved cube. Undo and scramble
 remain instantaneous operations while idle.
 
@@ -68,13 +68,14 @@ to solved and removes the game key without changing settings. Clearing browser
 data can also delete both local records. There is currently no account or cloud
 synchronization.
 
-W/S animate the view up/down, A/D animate it left/right, and Space keeps the
+S/W animate the view up/down, A/D animate it left/right, and Space keeps the
 current front fixed while animating a clockwise roll. Shift + Space performs the
 counterclockwise roll. If the roll key is customized, Shift + that custom key
 still selects the counterclockwise direction. These actions commit only
 `viewOrientation`: they do not change `CubeState`, increase the move count, enter
-move history, or get reverted by undo. U/I/H/J/K/L always resolve through the
-committed view, so their physical target changes after the animation completes.
+move history, or get reverted by undo. U/J/I/K/O/L always resolve through the
+committed view, so face-turn keys target the new physical face after the
+animation completes.
 Reset restores both a solved cube and the initial U-up/F-front view; scramble
 preserves the current view while replacing the cube state and clearing ordinary
 move history.
@@ -85,15 +86,12 @@ created. During a face-turn animation, view actions remain ignored. Q/E stays
 responsive in either case, and Reset cancels the active animation. There is no
 view-animation queue.
 
-Holding Q temporarily yaws the rendered cube to show more of the current right
-side; holding E does the same for the current left side. Releasing the active
-peek key restores the main view. Peek state is separate from both `CubeState`
-and `viewOrientation`, so it does not affect U/I/H/J/K/L face mapping, move
-count, history, or undo. Reset and scramble clear an active peek.
-
-If Q and E overlap, the latest keydown wins. Releasing a non-active peek key has
-no effect; releasing the active key clears the peek instead of restoring an
-earlier still-held key. Losing browser focus also clears peek state.
+Pressing E latches a yaw that shows more of the current right side; pressing Q
+latches the corresponding left-side view. Releasing the key does not restore the
+main view. Press the opposite peek key (Q after E, or E after Q) to return. A
+repeated press of the already active side leaves it latched. Peek state remains
+separate from both `CubeState` and `viewOrientation`, so it does not affect face
+mapping, move count, history, or undo. Reset and scramble clear an active peek.
 
 The renderer is intentionally read-only: stable cube position and sticker
 orientation come from `CubeState`; active animation data only derives a
@@ -101,7 +99,7 @@ temporary transition from one complete state to another.
 
 The default render camera uses a mild perspective front-facing top view: the F
 face remains centered toward the player while the U face is visible with
-perspective compression. Q/E peeking adds a temporary 24-degree world-Y yaw to
+perspective compression. Q/E peeking adds a latched 24-degree world-Y yaw to
 the current view transform without moving the camera.
 
 This increment still does not contain undo, scramble, or peek animation,
@@ -188,25 +186,25 @@ face from outside the cube.
 ## Default keyboard controls
 
 - U: turn current view top face clockwise
-- I: turn current view bottom face clockwise
-- H: turn current view left face clockwise
-- J: turn current view right face clockwise
-- K: turn current view front face clockwise
+- J: turn current view bottom face clockwise
+- I: turn current view left face clockwise
+- K: turn current view right face clockwise
+- O: turn current view front face clockwise
 - L: turn current view back face clockwise
-- Shift + U/I/H/J/K/L: turn the same current-view face counterclockwise
-- Hold ; + U/I/H/J/K/L: turn that face and its adjacent middle layer
-- Hold ; + Shift + U/I/H/J/K/L: perform the inverse two-layer turn
-- W/S: rotate the view up/down
+- Shift + U/J/I/K/O/L: turn the same current-view face counterclockwise
+- Hold F + U/J/I/K/O/L: turn that face and its adjacent middle layer
+- Hold F + Shift + U/J/I/K/O/L: perform the inverse two-layer turn
+- S/W: rotate the view up/down
 - A/D: rotate the view left/right
 - Space: keep the current front and roll the view clockwise
 - Shift + Space: keep the current front and roll the view counterclockwise
-- Hold Q: temporarily peek at the current right side
-- Hold E: temporarily peek at the current left side
+- E: latch the current right-side peek; press Q to return
+- Q: latch the current left-side peek; press E to return
 - R: reset to solved, restore the initial view, and clear ordinary move history
 - X: scramble from solved, preserve the view, and clear ordinary move history
 - Z: undo the last ordinary user turn
 
-`;` is the default wide turn modifier and can be changed in Settings. Ctrl,
+F is the default wide turn modifier and can be changed in Settings. Ctrl,
 Meta, and Alt are not accepted for this binding because they conflict with
 browser and operating-system shortcuts. The configured modifier must also be
 different from every ordinary action key.

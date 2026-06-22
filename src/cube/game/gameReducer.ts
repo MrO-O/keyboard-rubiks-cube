@@ -147,24 +147,14 @@ export function gameReducer(
       return completeViewAnimation(state, action.startedAt)
 
     case 'startPeekRight':
-      return {
-        ...state,
-        peekDirection: 'showRight',
-        lastActionLabel: 'Peek right',
-      }
+      return latchOrRestorePeek(state, 'showRight')
 
     case 'startPeekLeft':
-      return {
-        ...state,
-        peekDirection: 'showLeft',
-        lastActionLabel: 'Peek left',
-      }
+      return latchOrRestorePeek(state, 'showLeft')
 
     case 'stopPeekRight':
-      return stopPeek(state, 'showRight')
-
     case 'stopPeekLeft':
-      return stopPeek(state, 'showLeft')
+      return state
 
     case 'clearPeek':
       return clearPeek(state)
@@ -199,12 +189,18 @@ function updateWideTurnModifier(
   }
 }
 
-function stopPeek(
+function latchOrRestorePeek(
   state: CubeGameState,
   direction: Exclude<CubeGameState['peekDirection'], null>,
 ): CubeGameState {
-  if (state.peekDirection !== direction) return state
-  return clearPeek(state)
+  if (state.peekDirection === direction) return state
+  if (state.peekDirection) return clearPeek(state)
+  return {
+    ...state,
+    peekDirection: direction,
+    lastActionLabel:
+      direction === 'showRight' ? 'Peek right locked' : 'Peek left locked',
+  }
 }
 
 function clearPeek(state: CubeGameState): CubeGameState {

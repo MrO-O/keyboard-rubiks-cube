@@ -62,7 +62,7 @@ describe('settings storage and validation', () => {
     storage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(oldSettings))
 
     const migrated = loadSettings(storage)
-    expect(migrated.wideTurnModifierKey).toBe(';')
+    expect(migrated.wideTurnModifierKey).toBe('F')
     expect(migrated.animationDurationMs).toBe(260)
     expect(
       migrated.keymap.find((binding) => binding.actionId === 'turnViewFront')
@@ -187,7 +187,7 @@ describe('custom controls integration', () => {
       direction: 1,
       layers: 1,
     })
-    expect(keyToAction({ key: 'K' }, 'keydown', result.keymap)).toBeNull()
+    expect(keyToAction({ key: 'O' }, 'keydown', result.keymap)).toBeNull()
     expect(
       keyToAction({ key: 'P', ctrlKey: true }, 'keydown', result.keymap),
     ).toBeNull()
@@ -202,43 +202,41 @@ describe('custom controls integration', () => {
       id: 'stopWideTurnModifier',
     })
     expect(
-      keyToAction({ key: 'K' }, 'keydown', settings.keymap, 'G', true),
+      keyToAction({ key: 'O' }, 'keydown', settings.keymap, 'G', true),
     ).toEqual({ id: 'turnViewFront', direction: 1, layers: 2 })
     expect(keyToAction({ key: ';' }, 'keydown', settings.keymap, 'G')).toBeNull()
   })
 
-  it('uses a custom peek binding for keydown and keyup', () => {
+  it('uses a custom peek binding on keydown and ignores keyup', () => {
     const result = rebindAction(
       createDefaultSettings().keymap,
       'startPeekRight',
-      'O',
+      'V',
     )
     if (!result.ok) throw new Error(result.error)
 
-    expect(keyToAction({ key: 'O' }, 'keydown', result.keymap)).toEqual({
+    expect(keyToAction({ key: 'V' }, 'keydown', result.keymap)).toEqual({
       id: 'startPeekRight',
     })
-    expect(keyToAction({ key: 'O' }, 'keyup', result.keymap)).toEqual({
-      id: 'stopPeekRight',
-    })
+    expect(keyToAction({ key: 'V' }, 'keyup', result.keymap)).toBeNull()
   })
 
   it('uses Shift with a custom roll key for counterclockwise roll', () => {
     const result = rebindAction(
       createDefaultSettings().keymap,
       'rollViewClockwise',
-      'O',
+      'V',
     )
     if (!result.ok) throw new Error(result.error)
 
-    expect(keyToAction({ key: 'O' }, 'keydown', result.keymap)).toEqual({
+    expect(keyToAction({ key: 'V' }, 'keydown', result.keymap)).toEqual({
       id: 'rollViewClockwise',
     })
     expect(
-      keyToAction({ key: 'O', shiftKey: true }, 'keydown', result.keymap),
+      keyToAction({ key: 'V', shiftKey: true }, 'keydown', result.keymap),
     ).toEqual({ id: 'rollViewCounterClockwise' })
     expect(
-      keyToAction({ key: 'O', ctrlKey: true }, 'keydown', result.keymap),
+      keyToAction({ key: 'V', ctrlKey: true }, 'keydown', result.keymap),
     ).toBeNull()
   })
 })
